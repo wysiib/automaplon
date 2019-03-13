@@ -96,7 +96,7 @@ test(equality,[setup(cleanup_state)]) :-
 test(inequality,[setup(cleanup_state)]) :-
     new_state(S1) ,
     new_state(S2) ,
-    equals(S1, S2).
+    \+ equals(S1, S2).
 
 
 test(contains_transitions,[setup(cleanup_state)]) :-
