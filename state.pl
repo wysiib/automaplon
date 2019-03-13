@@ -62,7 +62,8 @@ is_accept(State) :-
     get_attr(State,accept,Accept) ,
     Accept == true.
 
-equals(State,State).
+equals(State1,State2) :- 
+    State1 == State2.
 
 step(State,Lit,Destinations) :-
     get_transitions(State,TransitionsDict) ,
