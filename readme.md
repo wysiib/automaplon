@@ -21,7 +21,9 @@ Overview of ported classes
 * [ ] ShuffleOperations
 * [ ] SpecialOperations
 * [X] ~~*State*~~ [2019-03-08]
-* [ ] StatePair
+* [X] ~~*StatePair*~~ [2019-03-14]
+  * Note: Can be expressed as tuple or two-element list or pair/2 term.
+    Does not need porting.
 * [ ] StringUnionOperations
 * [X] ~~*Transition*~~ [2019-03-08]
   * Note: Original Java implementation held a Unicode interval and a destination
