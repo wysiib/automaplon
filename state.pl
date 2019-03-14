@@ -1,6 +1,6 @@
 :- module(state, [new_state/1]).
 
-:- use_module(library(plunit)).
+:- use_module(util/maps).
 
 % Note: - skipped attribute 'int number'
 %       - skipped methods 'compareTo', 'toString' and all methods that are not public
@@ -10,7 +10,7 @@
 % Variable Attributes:
 %   id - unique state id
 %   accept - is true if state is accepting
-%   transitions - a dictionary mapping a literal to a list of states, the list might contain duplicates
+%   transitions - a map associating a literal to a list of states, the list might contain duplicates
 
 :- dynamic next_id/1.
 :- volatile next_id/1.
@@ -35,8 +35,8 @@ new_state(State) :-
 % which lead away from State.
 % The output variable Transitions might be unified with an empty data structure
 % If no transitions are attached to the State.
-get_transitions(State,TransitionsDict) :-
-    get_attr(State,transitions,TransitionsDict) , !.
+get_transitions(State,Transitions) :-
+    get_attr(State,transitions,Transitions) , !.
 get_transitions(_,transitions{}).
 
 %% get_transitions(+State, +Literal, -DestinationStates).
@@ -53,8 +53,8 @@ get_transitions(State,Lit,Destinations) :-
 % If no state is reachable by the specified literal the resulting list will
 % be empty.
 step(State,Lit,Destinations) :-
-    get_transitions(State,TransitionsDict) ,
-    get_dict(Lit,TransitionsDict,Destinations) ,
+    get_transitions(State,Transitions) ,
+    map_get(Transitions, Lit, Destinations) ,
     !. % red cut.
 step(_,_,[]).
 
@@ -75,10 +75,10 @@ add_transition(State,[Min,Max]-Destination) :-
 % Add a single transition to the Destination state from State by using
 % the Literal.
 add_transition(State,Lit,Destination) :-
-    get_transitions(State,TransitionsDict) ,
-    (get_dict(Lit,TransitionsDict,Destinations) ; Destinations = []) ,
-    put_dict(Lit,TransitionsDict,[Destination|Destinations],NewTransitionsDict) ,
-    put_attr(State,transitions,NewTransitionsDict).
+    get_transitions(State,Transitions) ,
+    (map_get(Transitions,Lit,Destinations) ; Destinations = []) ,
+    map_assoc(Transitions,Lit,[Destination|Destinations],NewTransitions) ,
+    put_attr(State,transitions,NewTransitions).
 
 
 %% add_transition_range(+State, +Min, +Max, +Dest).
@@ -94,7 +94,7 @@ add_transition_range(State, Min, Max, Dest) :-
 % the list of Literals.
 add_transition_range([], _, _).
 add_transition_range([L|Ls], State, Dest) :-
-    % NOTE: we add each literal to the dictionary, the original library uses range abstractions but has to use Automaton#reduce()
+    % NOTE: we add each literal to the map, the original library uses range abstractions but has to use Automaton#reduce()
     % TODO: evaluate pros and cons
     add_transition(State, L, Dest),
     add_transition_range(Ls, State, Dest).
@@ -139,6 +139,10 @@ is_accept(State) :-
 
 equals(State1,State2) :-
     State1 == State2.
+
+
+
+:- use_module(library(plunit)).
 
 cleanup_state :-
     retract(next_id(_)) ,
