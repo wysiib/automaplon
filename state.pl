@@ -1,4 +1,10 @@
-:- module(state, [new_state/1]).
+:- module(state, [new_state/1,
+                  is_accept/1,
+                  get_transitions/2,
+                  get_transitions/3 ,
+                  add_transition/2,
+                  set_accept/2,
+                  step/3]).
 
 :- use_module(util/maps).
 
@@ -36,7 +42,8 @@ new_state(State) :-
 % The output variable Transitions might be unified with an empty data structure
 % If no transitions are attached to the State.
 get_transitions(State,Transitions) :-
-    get_attr(State,transitions,Transitions) , !.
+    get_attr(State,transitions,Transitions) ,
+    !.
 get_transitions(_,transitions{}).
 
 %% get_transitions(+State, +Literal, -DestinationStates).
@@ -55,7 +62,7 @@ get_transitions(State,Lit,Destinations) :-
 step(State,Lit,Destinations) :-
     get_transitions(State,Transitions) ,
     map_get(Transitions, Lit, Destinations) ,
-    !. % red cut.
+    !.
 step(_,_,[]).
 
 %% add_transition(+State, +Transition).
@@ -76,10 +83,10 @@ add_transition(State,[Min,Max]-Destination) :-
 % the Literal.
 add_transition(State,Lit,Destination) :-
     get_transitions(State,Transitions) ,
-    (map_get(Transitions,Lit,Destinations) ; Destinations = []) ,
-    map_assoc(Transitions,Lit,[Destination|Destinations],NewTransitions) ,
+    (map_get(Transitions,Lit,Destinations) ; Destinations = []) , 
+    ! , 
+    map_assoc(Transitions,Lit,[Destination|Destinations],NewTransitions) , % TODO: use a set for Destinations?
     put_attr(State,transitions,NewTransitions).
-
 
 %% add_transition_range(+State, +Min, +Max, +Dest).
 %
@@ -99,7 +106,6 @@ add_transition_range([L|Ls], State, Dest) :-
     add_transition(State, L, Dest),
     add_transition_range(Ls, State, Dest).
 
-
 %% literals_list(+Minimum, +Maximum, -Literals).
 %
 % Generates a list of literals from Minimum to Maximum.
@@ -115,7 +121,6 @@ literals_list(Min, Max, Literals) :-
     atom_codes(Max, [AsciiMax]),
     numlist(AsciiMin, AsciiMax, Asciis),
     findall(L, (member(A, Asciis), atom_codes(L, [A])), Literals).
-
 
 %% reset_transitions(+State).
 %
@@ -141,8 +146,12 @@ equals(State1,State2) :-
     State1 == State2.
 
 
-
 :- use_module(library(plunit)).
+
+equal_lists_as_set(A,B) :- 
+    list_to_ord_set(A,SA) , 
+    list_to_ord_set(B,SB) , 
+    SA == SB.
 
 cleanup_state :-
     retract(next_id(_)) ,
@@ -186,8 +195,13 @@ test(non_accepting_state) :-
     \+ is_accept(S1).
 
 test(toggle_accepting_state) :-
-    new_state(S1),
+    new_state(S1) ,
     set_accept(S1, true),
+    is_accept(S1) , 
+    set_accept(S1, false),
+    \+ is_accept(S1) ,
+    set_accept(S1, true),
+    is_accept(S1) , 
     set_accept(S1, false),
     \+ is_accept(S1).
 
@@ -197,12 +211,168 @@ test(backtrack_accepting_state) :-
     (set_accept(S1, false), fail ; true),
     is_accept(S1).
 
+test(add_get_transition1) :- 
+    new_state(S1) , 
+    new_state(S2) , 
+    add_transition(S1,[a,d]-S2) , 
+    get_transitions(S1,a,TransitionsA) , 
+    equal_lists_as_set(TransitionsA,[S2]) , 
+    get_transitions(S1,b,TransitionsB) , 
+    equal_lists_as_set(TransitionsB,[S2]) , 
+    get_transitions(S1,c,TransitionsC) , 
+    equal_lists_as_set(TransitionsC,[S2]) , 
+    get_transitions(S1,d,TransitionsD) , 
+    equal_lists_as_set(TransitionsD,[S2]).
+
+test(add_get_transition2) :- 
+    new_state(S1) , 
+    new_state(S2) , 
+    new_state(S3) , 
+    add_transition(S1,[a,d]-S2) , 
+    add_transition(S1,[a,d]-S3) , 
+    get_transitions(S1,a,TransitionsA) , 
+    equal_lists_as_set(TransitionsA,[S2,S3]) , 
+    get_transitions(S1,b,TransitionsB) , 
+    equal_lists_as_set(TransitionsB,[S2,S3]) , 
+    get_transitions(S1,c,TransitionsC) , 
+    equal_lists_as_set(TransitionsC,[S2,S3]) , 
+    get_transitions(S1,d,TransitionsD) , 
+    equal_lists_as_set(TransitionsD,[S2,S3]) , 
+    get_transitions(S2,d,TransitionsD2) , 
+    TransitionsD2 == [] , 
+    get_transitions(S3,k,TransitionsK3) , 
+    TransitionsK3 == [].
+
+test(add_get_transition3) :- 
+    new_state(S1) , 
+    new_state(S2) , 
+    new_state(S3) , 
+    new_state(S4) , 
+    add_transition(S1,[m,q]-S2) , 
+    add_transition(S1,[m,x]-S3) , 
+    add_transition(S1,[l,z]-S4) , 
+    get_transitions(S1,l,TransitionsN) , 
+    equal_lists_as_set(TransitionsN,[S4]) , 
+    get_transitions(S1,m,TransitionsM) , 
+    equal_lists_as_set(TransitionsM,[S2,S3,S4]) , 
+    get_transitions(S1,p,TransitionsP) , 
+    equal_lists_as_set(TransitionsP,[S2,S3,S4]) , 
+    get_transitions(S1,r,TransitionsR) , 
+    equal_lists_as_set(TransitionsR,[S3,S4]) , 
+    get_transitions(S1,x,TransitionsX) , 
+    equal_lists_as_set(TransitionsX,[S3,S4]) ,
+    get_transitions(S1,y,TransitionsY) , 
+    equal_lists_as_set(TransitionsY,[S4]) , 
+    get_transitions(S1,z,TransitionsZ) , 
+    equal_lists_as_set(TransitionsZ,[S4]) , 
+    get_transitions(S4,d,TransitionsD4) , 
+    TransitionsD4 == [] , 
+    get_transitions(S3,k,TransitionsK3) , 
+    TransitionsK3 == [].
+
+test(add_get_transition4) :- 
+    new_state(S1) , 
+    new_state(S2) , 
+    new_state(S3) , 
+    new_state(S4) , 
+    add_transition(S1,[m,q]-S2) , 
+    add_transition(S1,[a,z]-S3) , 
+    get_transitions(S1,b,TransitionsB) , 
+    equal_lists_as_set(TransitionsB,[S3]) , 
+    get_transitions(S1,m,TransitionsM) , 
+    equal_lists_as_set(TransitionsM,[S2,S3]) , 
+    get_transitions(S1,p,TransitionsP) , 
+    equal_lists_as_set(TransitionsP,[S2,S3]) ,
+    add_transition(S2,[a,d]-S3) , 
+    add_transition(S2,[a,z]-S4) ,  
+    get_transitions(S2,r,TransitionsR) , 
+    equal_lists_as_set(TransitionsR,[S4]) , 
+    get_transitions(S2,c,TransitionsC) , 
+    equal_lists_as_set(TransitionsC,[S3,S4]) ,
+    get_transitions(S2,z,TransitionsZ) , 
+    equal_lists_as_set(TransitionsZ,[S4]) , 
+    get_transitions(S3,a,TransitionsA3) , 
+    TransitionsA3 == [] , 
+    get_transitions(S4,k,TransitionsK4) , 
+    TransitionsK4 == [].
+
+test(add_get_transition_backtrackable) :- 
+    new_state(S1) , 
+    new_state(S2) , 
+    ( add_transition(S1,[a,d]-S2) , 
+      get_transitions(S1,a,TransitionsA) , 
+      TransitionsA == [S2] , 
+      get_transitions(S1,b,TransitionsB) , 
+      TransitionsB == [S2] , 
+      get_transitions(S1,c,TransitionsC) , 
+      TransitionsC == [S2] ,
+      get_transitions(S1,d,TransitionsD) , 
+      TransitionsD == [S2] , 
+      fail
+    ; get_transitions(S1,a,TransitionsA) , 
+      TransitionsA == [] , 
+      get_transitions(S1,b,TransitionsB) , 
+      TransitionsB == [] , 
+      get_transitions(S1,c,TransitionsC) , 
+      TransitionsC == [] , 
+      get_transitions(S1,d,TransitionsD) , 
+      TransitionsD == []).
+
+test(add_get_transition_backtrackable2) :- 
+    new_state(S1) , 
+    new_state(S2) , 
+    new_state(S3) , 
+    new_state(S4) , 
+    ( add_transition(S1,[a,b]-S2) , 
+      add_transition(S1,[a,b]-S3) , 
+      add_transition(S1,[a]-S4) , 
+      get_transitions(S1,a,TransitionsA) , 
+      TransitionsA == [S2,S3,S4] , 
+      get_transitions(S1,b,TransitionsB) , 
+      TransitionsB == [S2,S3] , 
+      fail
+    ; get_transitions(S1,a,TransitionsA) , 
+      TransitionsA == [] , 
+      get_transitions(S1,b,TransitionsB) , 
+      TransitionsB == []).
+
 :- end_tests(state_basic).
 
 :- begin_tests(helper_predicates).
 
 test(generate_literals) :-
-    literals_list(a, d, [a, b, c, d]).
+    literals_list(a, d, Lits1) , 
+    Lits1 == [a, b, c, d] , 
+    literals_list(a, e, Lits2) , 
+    Lits2 == [a, b, c, d, e] , 
+    literals_list(e, g, Lits3) , 
+    Lits3 == [e, f, g] , 
+    literals_list(a, a, Lits4) , 
+    Lits4 == [a] , 
+    literals_list(j, j, Lits5) , 
+    Lits5 == [j] , 
+    literals_list(z, z, Lits6) , 
+    Lits6 == [z].
+
+test(generate_literals_wrong_input1,[fail]) :-
+    literals_list(d, a, _).
+
+test(generate_literals_wrong_input2,[fail]) :-
+    literals_list(z, t, _).
+
+test(generate_literals_fail_unification1,[fail]) :-
+    literals_list(e, t, [a, b, c]).
+
+test(generate_literals_fail_unification2,[fail]) :-
+    literals_list(a, z, [a, b, c, d, e, f, g, h]).
+
+test(generate_literals_fail_unification_after_solution1,[fail]) :- 
+    literals_list(a, d, Lits) , 
+    Lits = [a, b].
+
+test(generate_literals_fail_unification_after_solution1,[fail]) :- 
+    literals_list(k, z, Lits) , 
+    Lits = [k, l, m, n, O, O].
 
 :- end_tests(helper_predicates).
 
