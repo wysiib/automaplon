@@ -1,5 +1,4 @@
 .PHONY: message
-
 message:
 	@echo 'The Makefile is only used for testing purposes.'
 	@echo 'Type "make help" for options.'

@@ -189,6 +189,67 @@ test(number_of_states) :-
     get_number_of_states(A, AmountOfStates6) , 
     AmountOfStates6 == 1.
 
-:- end_tests(automaton_states).
+test(live_states1) :- 
+    new_automaton(A) , 
+    new_state(S1) , 
+    get_initial(A, Initial) , 
+    add_transition(Initial, [a,d]-S1) , 
+    new_state(S2) , 
+    add_transition(S1, [a,a]-S2) , 
+    set_accept(S1, true) , 
+    get_live_states(A, LiveStates) , 
+    equal_lists_as_set(LiveStates, [Initial, S1]).
 
-% TODO: extend tests
+test(live_states2) :- 
+    new_automaton(A) , 
+    new_state(S1) , 
+    get_initial(A, Initial) , 
+    add_transition(Initial, [a,d]-S1) , 
+    new_state(S2) , 
+    add_transition(S1, [a,a]-S2) , 
+    add_transition(S2, [b,b]-S1) , 
+    set_accept(S1, true) , 
+    get_live_states(A, LiveStates) , 
+    equal_lists_as_set(LiveStates, [Initial, S1, S2]).
+
+test(live_states3) :- 
+    new_automaton(A) , 
+    new_state(S1) , 
+    new_state(S2) , 
+    new_state(S3) , 
+    new_state(S4) , 
+    get_initial(A, Initial) , 
+    add_transition(Initial, [a,d]-S1) , 
+    add_transition(S1, [a,a]-S2) , 
+    add_transition(S2, [b,b]-S3) , 
+    add_transition(S3, [a,z]-S4) , 
+    set_accept(S4, true) , 
+    get_live_states(A, LiveStates) , 
+    equal_lists_as_set(LiveStates, [Initial, S1, S2, S3, S4]).
+
+test(live_states4) :- 
+    new_automaton(A) , 
+    new_state(S1) , 
+    new_state(S2) , 
+    new_state(S3) , 
+    new_state(S4) , 
+    get_initial(A, Initial) , 
+    add_transition(Initial, [a,d]-S1) , 
+    add_transition(S1, [a,a]-S2) , 
+    add_transition(S2, [k,m]-S3) , 
+    add_transition(S3, [a,z]-S4) , 
+    set_accept(Initial, true) , 
+    get_live_states(A, LiveStates) , 
+    LiveStates == [Initial].
+
+test(live_states5) :- 
+    new_automaton(A) , 
+    new_state(S1) , 
+    new_state(S2) , 
+    get_initial(A, Initial) , 
+    add_transition(Initial, [a,d]-S1) , 
+    add_transition(S1, [c,d]-S2) , 
+    get_live_states(A, LiveStates) , 
+    LiveStates == [].
+
+:- end_tests(automaton_states).
