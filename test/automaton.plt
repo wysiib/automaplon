@@ -66,4 +66,32 @@ test(construction_and_extension_nondet) :-
 
 :- end_tests(automaton_basic).
 
+:- begin_tests(automaton_states).
+
+test(get_states1) :- 
+    new_automaton(A) , 
+    get_initial(A, Initial) , 
+    new_state(S1) , new_state(S2) , new_state(S3) , 
+    add_transition(Initial, [a,d]-S1) , 
+    add_transition(Initial, [e,f]-S2) , 
+    add_transition(S1, [g,h]-S3) , 
+    get_states(A, ReachableStates) , 
+    equal_lists_as_set(ReachableStates, [Initial, S1, S2, S3]).
+
+test(get_states2) :- 
+    new_automaton(A) , 
+    set_deterministic(A, false) , 
+    get_initial(A, Initial) , 
+    new_state(S1) , new_state(S2) , new_state(S3) , new_state(S3) , 
+    add_transition(Initial, [a,d]-S1) , 
+    add_transition(Initial, [e,f]-S2) , 
+    add_transition(S1, [g,h]-S3) , 
+    add_transition(S3, [a,a]-S1) , 
+    add_transition(S3, [a,a]-S2) , 
+    add_transition(S3, [a,a]-S3) , 
+    get_states(A, ReachableStates) , 
+    equal_lists_as_set(ReachableStates, [Initial, S1, S2, S3]).
+
+:- end_tests(automaton_states).
+
 % TODO: extend tests
