@@ -99,12 +99,22 @@ get_info(Automaton, Info) :-
 %% get_states(+Automaton, -States).
 %
 % Get all states by exploring the initial state exhaustively.
-get_states(Automaton, [Initial|ReachableStates]) :- 
+get_states(Automaton, ReachableStates) :- 
+  get_reachable_and_accept_states(Automaton, ReachableStates, _).
+
+%% get_accept_states(+Automaton, -States).
+%
+% Get all accepting states by exploring the initial state exhaustively.
+get_accept_states(Automaton, ReachableAcceptStates) :- 
+  get_reachable_and_accept_states(Automaton, _, ReachableAcceptStates).
+
+get_reachable_and_accept_states(Automaton, [Initial|ReachableStates], AcceptStates) :- 
   get_initial(Automaton, Initial) , 
   retractall(seen(_)) , 
   get_attr(Initial, id, StateId) , 
-  get_reachable_and_accept_states(Initial, StateId, [], ReachableStates, [], _AcceptStates) , 
-  retractall(seen(_)).
+  get_reachable_and_accept_states(Initial, StateId, [], ReachableStates, [], TempAcceptStates) , 
+  retractall(seen(_)) , 
+  add_state_to_list_if_accepting(Initial, TempAcceptStates, AcceptStates).
 
 get_reachable_and_accept_states(_, StateId, ReachableAcc, ReachableAcc, AcceptAcc, AcceptAcc) :- 
   seen(StateId) , 
@@ -124,17 +134,6 @@ map_get_reachable_and_accept_states([NextState|T], ReachableAcc, ReachableStates
   map_get_reachable_and_accept_states(T, [NextState|TempReachableAcc], ReachableStates, NewAcceptAcc, AcceptStates).
 map_get_reachable_and_accept_states([_|T], ReachableAcc, ReachableStates, AcceptAcc, AcceptStates) :- 
   map_get_reachable_and_accept_states(T, ReachableAcc, ReachableStates, AcceptAcc, AcceptStates).
-
-%% get_accept_states(+Automaton, -States).
-%
-% Get all accepting states by exploring the initial state exhaustively.
-get_accept_states(Automaton, ReachableAcceptStates) :- 
-  get_initial(Automaton, Initial) , 
-  retractall(seen(_)) , 
-  get_attr(Initial, id, StateId) , 
-  get_reachable_and_accept_states(Initial, StateId, [], _ReachableStates, [], TempAcceptStates) , 
-  retractall(seen(_)) , 
-  add_state_to_list_if_accepting(Initial, TempAcceptStates, ReachableAcceptStates).
 
 add_state_to_list_if_accepting(State, List, [State|List]) :- 
   is_accept(State) , 
