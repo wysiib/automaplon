@@ -314,6 +314,9 @@ test(clone2) :-
     get_deterministic(C, CDet) , CDet == false , 
     get_minimise_always(C, CMin) , CMin == true , 
     get_singleton(C, CSin) , CSin == null , 
+    get_number_of_states(A, NrStatesA) , 
+    get_number_of_states(C, NrStatesC) , 
+    NrStatesA == NrStatesC , 
     % adding transitions to cloned automata should not change original
     new_state(C1) , new_state(C2) , 
     add_transition(InitialC, [a,z]-C1) , 
