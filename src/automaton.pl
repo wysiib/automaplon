@@ -10,7 +10,8 @@
                       get_minimise_always/2,
                       set_minimise_always/2, 
                       get_states/2, 
-                      get_accept_states/2]).
+                      get_accept_states/2, 
+                      get_number_of_states/2]).
 
 :- use_module(state).
 :- use_module(util/maps).
@@ -157,3 +158,10 @@ add_state_to_list_if_accepting(State, List, [State|List]) :-
   is_accept(State) , 
   !.
 add_state_to_list_if_accepting(_, List, List).
+
+%% get_number_of_states(+Automaton, -States).
+%
+% Get the amount of states in the automaton.
+get_number_of_states(Automaton, AmountOfStates) :- 
+  get_states(Automaton, ReachableStates) , 
+  length(ReachableStates, AmountOfStates).
