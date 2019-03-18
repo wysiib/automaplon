@@ -1,6 +1,7 @@
 :- module(state, [new_state/1,
                   is_accept/1,
                   reset_transitions/1,
+                  get_id/2,
                   get_next_states/2,
                   get_transitions/2,
                   get_transitions/3,
@@ -32,6 +33,12 @@ get_next_id(N) :-
     retract(next_id(N)),
     NN is N + 1,
     assert(next_id(NN)).
+
+%% get_id(+State, -Id).
+%
+% Return a state's id.
+get_id(State, Id) :- 
+    get_attr(State, id, Id).
 
 %% new_state(-State).
 %
@@ -163,3 +170,10 @@ is_accept(State) :-
 % True if two states are exactly the same.
 equals(State1, State2) :-
     State1 == State2.
+
+%% Hooks for unification of a State variable's attributes.
+% We do not allow unification of two States but check for equality only, i.e., 
+% both states have the same attribute id (both States are exactly the same).
+id:attr_unify_hook(IdX, Y) :- 
+    get_id(Y, IdY) , 
+    IdX == IdY.
