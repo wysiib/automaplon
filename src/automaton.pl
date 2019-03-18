@@ -11,7 +11,8 @@
                       set_minimise_always/2, 
                       get_states/2, 
                       get_accept_states/2, 
-                      get_number_of_states/2]).
+                      get_number_of_states/2,
+                      get_live_states/2]).
 
 :- use_module(state).
 :- use_module(util/maps).
@@ -111,7 +112,7 @@ get_accept_states(Automaton, ReachableAcceptStates) :-
 get_reachable_and_accept_states(Automaton, [Initial|ReachableStates], AcceptStates) :- 
   get_initial(Automaton, Initial) , 
   retractall(seen(_)) , 
-  get_attr(Initial, id, StateId) , 
+  get_id(Initial, StateId) , 
   get_reachable_and_accept_states(Initial, StateId, [], ReachableStates, [], TempAcceptStates) , 
   retractall(seen(_)) , 
   add_state_to_list_if_accepting(Initial, TempAcceptStates, AcceptStates).
@@ -126,7 +127,7 @@ get_reachable_and_accept_states(State, StateId, Acc, ReachableStates, AcceptAcc,
 
 map_get_reachable_and_accept_states([], ReachableAcc, ReachableAcc, AcceptAcc, AcceptAcc).
 map_get_reachable_and_accept_states([NextState|T], ReachableAcc, ReachableStates, AcceptAcc, AcceptStates) :- 
-  get_attr(NextState, id, StateId) , 
+  get_id(NextState, StateId) , 
   \+ seen(StateId) , 
   ! , 
   get_reachable_and_accept_states(NextState, StateId, ReachableAcc, TempReachableAcc, AcceptAcc, TempAcceptAcc) , 
@@ -146,3 +147,50 @@ add_state_to_list_if_accepting(_, List, List).
 get_number_of_states(Automaton, AmountOfStates) :- 
   get_states(Automaton, ReachableStates) , 
   length(ReachableStates, AmountOfStates).
+
+%% get_live_states(+Automaton, -LiveStates).
+%
+% Return a set of live states. A state is live if it can reach an accepting state.
+get_live_states(Automaton, LiveStates) :- 
+  get_reachable_and_accept_states(Automaton, ReachableStates, AcceptStates) , 
+  get_live_states(ReachableStates, AcceptStates, LiveStates).
+
+get_live_states(_, [], []) :- 
+  !. % no live states if no accepting states
+get_live_states(ReachableStates, AcceptStates, LiveStates) :- 
+  empty_map(BackwardPathMap) , 
+  init_backward_path_map_for_states(ReachableStates, BackwardPathMap, BackwardPathMap2) , 
+  % all accepting states are live and each state reaching a live state is live as well
+  get_live_states_from_accepting_states(AcceptStates, BackwardPathMap2, AcceptStates, LiveStates).
+
+% Each state we find when exploring the backward path starting at accepting states is live as well.
+get_live_states_from_accepting_states([], _, Acc, Acc).
+get_live_states_from_accepting_states([State|WorkListRest], BackwardPathMap, Acc, LiveStates) :- 
+  get_id(State, StateId) , 
+  map_get(BackwardPathMap, StateId, PreStates) , 
+  ! , 
+  ord_subtract(PreStates, Acc, NotYetLiveStates) , 
+  ord_union(Acc, NotYetLiveStates, NewAcc) , 
+  ord_union(WorkListRest, NotYetLiveStates, NewWorkListRest) , 
+  get_live_states_from_accepting_states(NewWorkListRest, BackwardPathMap, NewAcc, LiveStates).
+get_live_states_from_accepting_states([_|WorkListRest], BackwardPathMap, Acc, LiveStates) :- 
+  get_live_states_from_accepting_states(WorkListRest, BackwardPathMap, Acc, LiveStates).
+
+% Create a map of state ids mapping to a set of states that have a direct transition to their key state (backward path).
+init_backward_path_map_for_states([], BackwardPathMap, BackwardPathMap).
+init_backward_path_map_for_states([ReachableState|T], BackwardPathMap, NewBackwardPathMap) :- 
+  init_backward_path_map_for_state(ReachableState, BackwardPathMap, TempBackwardPathMap) , 
+  init_backward_path_map_for_states(T, TempBackwardPathMap, NewBackwardPathMap).
+
+init_backward_path_map_for_state(ReachableState, BackwardPathMap, NewBackwardPathMap) :-
+  get_next_states(ReachableState, NextStates) , 
+  init_backward_path_map_for_state_and_next_states(ReachableState, NextStates, BackwardPathMap, NewBackwardPathMap).
+
+init_backward_path_map_for_state_and_next_states(_, [], BackwardPathMap, BackwardPathMap).
+init_backward_path_map_for_state_and_next_states(ReachableState, [NextState|T], BackwardPathMap, NewBackwardPathMap) :-
+  get_id(NextState, NextStateId) , 
+  ( map_get(BackwardPathMap, NextStateId, SetOfStates) , 
+    ! , 
+    map_assoc(BackwardPathMap, NextStateId, [ReachableState|SetOfStates], TempBackwardPathMap)
+  ; map_assoc(BackwardPathMap, NextStateId, [ReachableState], TempBackwardPathMap)) , 
+  init_backward_path_map_for_state_and_next_states(ReachableState, T, TempBackwardPathMap, NewBackwardPathMap).
