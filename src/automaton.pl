@@ -103,26 +103,27 @@ get_states(Automaton, [Initial|ReachableStates]) :-
   get_initial(Automaton, Initial) , 
   retractall(seen(_)) , 
   get_attr(Initial, id, StateId) , 
-  get_reachable_states(Initial, StateId, [], ReachableStates) , 
+  get_reachable_and_accept_states(Initial, StateId, [], ReachableStates, [], _AcceptStates) , 
   retractall(seen(_)).
 
-get_reachable_states(_, StateId, Acc, Acc) :- 
+get_reachable_and_accept_states(_, StateId, ReachableAcc, ReachableAcc, AcceptAcc, AcceptAcc) :- 
   seen(StateId) , 
   !.
-get_reachable_states(State, StateId, Acc, ReachableStates) :- 
+get_reachable_and_accept_states(State, StateId, Acc, ReachableStates, AcceptAcc, AcceptStates) :- 
   assert(seen(StateId)) , 
   get_next_states(State, NextStates) , 
-  map_get_reachable_states(NextStates, Acc, ReachableStates).
+  map_get_reachable_and_accept_states(NextStates, Acc, ReachableStates, AcceptAcc, AcceptStates).
 
-map_get_reachable_states([], Acc, Acc).
-map_get_reachable_states([NextState|T], Acc, ReachableStates) :- 
+map_get_reachable_and_accept_states([], ReachableAcc, ReachableAcc, AcceptAcc, AcceptAcc).
+map_get_reachable_and_accept_states([NextState|T], ReachableAcc, ReachableStates, AcceptAcc, AcceptStates) :- 
   get_attr(NextState, id, StateId) , 
   \+ seen(StateId) , 
   ! , 
-  get_reachable_states(NextState, StateId, Acc, TempNewAcc) , 
-  map_get_reachable_states(T, [NextState|TempNewAcc], ReachableStates).
-map_get_reachable_states([_|T], Acc, ReachableStates) :- 
-  map_get_reachable_states(T, Acc, ReachableStates).
+  get_reachable_and_accept_states(NextState, StateId, ReachableAcc, TempReachableAcc, AcceptAcc, TempAcceptAcc) , 
+  add_state_to_list_if_accepting(NextState, TempAcceptAcc, NewAcceptAcc) , 
+  map_get_reachable_and_accept_states(T, [NextState|TempReachableAcc], ReachableStates, NewAcceptAcc, AcceptStates).
+map_get_reachable_and_accept_states([_|T], ReachableAcc, ReachableStates, AcceptAcc, AcceptStates) :- 
+  map_get_reachable_and_accept_states(T, ReachableAcc, ReachableStates, AcceptAcc, AcceptStates).
 
 %% get_accept_states(+Automaton, -States).
 %
@@ -131,28 +132,9 @@ get_accept_states(Automaton, ReachableAcceptStates) :-
   get_initial(Automaton, Initial) , 
   retractall(seen(_)) , 
   get_attr(Initial, id, StateId) , 
-  get_reachable_accept_states(Initial, StateId, [], TempReachableAcceptStates) , 
+  get_reachable_and_accept_states(Initial, StateId, [], _ReachableStates, [], TempAcceptStates) , 
   retractall(seen(_)) , 
-  add_state_to_list_if_accepting(Initial, TempReachableAcceptStates, ReachableAcceptStates).
-
-get_reachable_accept_states(_, StateId, Acc, Acc) :- 
-  seen(StateId) , 
-  !.
-get_reachable_accept_states(State, StateId, Acc, ReachableAcceptStates) :- 
-  assert(seen(StateId)) , 
-  get_next_states(State, NextStates) , 
-  map_get_reachable_accept_states(NextStates, Acc, ReachableAcceptStates).
-
-map_get_reachable_accept_states([], Acc, Acc).
-map_get_reachable_accept_states([NextState|T], Acc, ReachableAcceptStates) :- 
-  get_attr(NextState, id, StateId) , 
-  \+ seen(StateId) , 
-  ! , 
-  get_reachable_accept_states(NextState, StateId, Acc, TempNewAcc) , 
-  add_state_to_list_if_accepting(NextState, TempNewAcc, NewAcc) , 
-  map_get_reachable_accept_states(T, NewAcc, ReachableAcceptStates).
-map_get_reachable_accept_states([_|T], Acc, ReachableAcceptStates) :- 
-  map_get_reachable_accept_states(T, Acc, ReachableAcceptStates).
+  add_state_to_list_if_accepting(Initial, TempAcceptStates, ReachableAcceptStates).
 
 add_state_to_list_if_accepting(State, List, [State|List]) :- 
   is_accept(State) , 
