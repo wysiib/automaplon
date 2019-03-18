@@ -140,24 +140,24 @@ literals_list(Min, Max, Literals) :-
 %
 % Remove all transitions attached to State.
 reset_transitions(State) :-
-    put_attr(State,transitions,transitions{}).
+    put_attr(State, transitions, transitions{}).
 
 %% set_accept(+State, +Accept).
 %
 % Sets whether State shall be accepting or not.
 % State will be accepting iff Accept == true.
-set_accept(State,Accept) :-
-    put_attr(State,accept,Accept).
+set_accept(State, Accept) :-
+    put_attr(State, accept, Accept).
 
 %% is_accept(+State).
 %
 % Succeeds if State is accepting.
 is_accept(State) :-
-    get_attr(State,accept,Accept) ,
+    get_attr(State, accept, Accept) ,
     Accept == true.
 
 %% is_accept(+State1, +State2).
 %
 % True if two states are exactly the same.
-equals(State1,State2) :-
+equals(State1, State2) :-
     State1 == State2.

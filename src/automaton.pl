@@ -9,7 +9,8 @@
                       set_info/2,
                       get_minimise_always/2,
                       set_minimise_always/2, 
-                      get_states/2]).
+                      get_states/2, 
+                      get_accept_states/2]).
 
 :- use_module(state).
 :- use_module(util/maps).
@@ -96,10 +97,10 @@ get_info(Automaton, Info) :-
 
 %% get_states(+Automaton, -States).
 %
-% Get all states by exploring the intial state exhaustively.
+% Get all states by exploring the initial state exhaustively.
 get_states(Automaton, [Initial|ReachableStates]) :- 
   get_initial(Automaton, Initial) , 
-  %retractall(seen(_)) , 
+  retractall(seen(_)) , 
   get_attr(Initial, id, StateId) , 
   get_reachable_states(Initial, StateId, [], ReachableStates) , 
   retractall(seen(_)).
@@ -117,7 +118,42 @@ map_get_reachable_states([NextState|T], Acc, ReachableStates) :-
   get_attr(NextState, id, StateId) , 
   \+ seen(StateId) , 
   ! , 
-  get_reachable_states(NextState, StateId, Acc, NewAcc) , 
-  map_get_reachable_states(T, [NextState|NewAcc], ReachableStates).
+  get_reachable_states(NextState, StateId, Acc, TempNewAcc) , 
+  map_get_reachable_states(T, [NextState|TempNewAcc], ReachableStates).
 map_get_reachable_states([_|T], Acc, ReachableStates) :- 
   map_get_reachable_states(T, Acc, ReachableStates).
+
+%% get_accept_states(+Automaton, -States).
+%
+% Get all accepting states by exploring the initial state exhaustively.
+get_accept_states(Automaton, ReachableAcceptStates) :- 
+  get_initial(Automaton, Initial) , 
+  retractall(seen(_)) , 
+  get_attr(Initial, id, StateId) , 
+  get_reachable_accept_states(Initial, StateId, [], TempReachableAcceptStates) , 
+  retractall(seen(_)) , 
+  add_state_to_list_if_accepting(Initial, TempReachableAcceptStates, ReachableAcceptStates).
+
+get_reachable_accept_states(_, StateId, Acc, Acc) :- 
+  seen(StateId) , 
+  !.
+get_reachable_accept_states(State, StateId, Acc, ReachableAcceptStates) :- 
+  assert(seen(StateId)) , 
+  get_next_states(State, NextStates) , 
+  map_get_reachable_accept_states(NextStates, Acc, ReachableAcceptStates).
+
+map_get_reachable_accept_states([], Acc, Acc).
+map_get_reachable_accept_states([NextState|T], Acc, ReachableAcceptStates) :- 
+  get_attr(NextState, id, StateId) , 
+  \+ seen(StateId) , 
+  ! , 
+  get_reachable_accept_states(NextState, StateId, Acc, TempNewAcc) , 
+  add_state_to_list_if_accepting(NextState, TempNewAcc, NewAcc) , 
+  map_get_reachable_accept_states(T, NewAcc, ReachableAcceptStates).
+map_get_reachable_accept_states([_|T], Acc, ReachableAcceptStates) :- 
+  map_get_reachable_accept_states(T, Acc, ReachableAcceptStates).
+
+add_state_to_list_if_accepting(State, List, [State|List]) :- 
+  is_accept(State) , 
+  !.
+add_state_to_list_if_accepting(_, List, List).
