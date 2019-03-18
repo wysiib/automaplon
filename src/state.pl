@@ -6,7 +6,6 @@
                   get_transitions/2,
                   get_transitions/3,
                   add_transition/2,
-                  add_transition/3,
                   set_accept/2,
                   equals/2,
                   step/3]).
@@ -102,8 +101,8 @@ add_transition(State, [Min,Max]-Destination) :-
 
 %% add_transition(+State, +Literal, +Destination).
 %
-% Add a single transition to the Destination state from State by using
-% the Literal.
+% Add a single transition to the Destination state from State by using the Literal.
+% Note: only to be used in add_transition/2, attribute next_states is not updated here!
 add_transition(State, Lit, Destination) :-
     get_transitions(State, Transitions) ,
     (map_get(Transitions, Lit, Destinations) ; Destinations = []) , % TODO: use a set?

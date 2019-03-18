@@ -233,9 +233,9 @@ clone_transitions_to_fresh_state(ClonedState, [Lit-Destinations|T], StatesMap) :
 add_transitions_to_fresh_state([], _, _, _).
 add_transitions_to_fresh_state([Destination|T], ClonedState, Lit, StatesMap) :- 
   get_id(Destination, StateId) , 
-  map_get(StatesMap, StateId, ClonedState) , 
+  map_get(StatesMap, StateId, FreshDestination) , 
   ! , 
-  add_transition(ClonedState, Lit, Destination) , 
+  add_transition(ClonedState, [Lit,Lit]-FreshDestination) , 
   add_transitions_to_fresh_state(T, ClonedState, Lit, StatesMap).
 add_transitions_to_fresh_state([_|T], ClonedState, Lit, StatesMap) :- 
   % dead states are removed when cloning
