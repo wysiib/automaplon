@@ -97,25 +97,27 @@ get_info(Automaton, Info) :-
 %% get_states(+Automaton, -States).
 %
 % Get all states by exploring the intial state exhaustively.
-get_states(Automaton, ReachableStates) :- 
-    get_initial(Automaton, Initial) , 
-    %retractall(seen(_)) , 
-    get_reachable_states(Initial, [], ReachableStates) , 
-    retractall(seen(_)).
+get_states(Automaton, [Initial|ReachableStates]) :- 
+  get_initial(Automaton, Initial) , 
+  %retractall(seen(_)) , 
+  get_attr(Initial, id, StateId) , 
+  get_reachable_states(Initial, StateId, [], ReachableStates) , 
+  retractall(seen(_)).
 
-get_reachable_states(Initial, Acc, Acc) :- 
-  get_attr(Initial, id, Id) , 
-  seen(Id) , 
+get_reachable_states(_, StateId, Acc, Acc) :- 
+  seen(StateId) , 
   !.
-get_reachable_states(Initial, Acc, ReachableStates) :- 
+get_reachable_states(State, StateId, Acc, ReachableStates) :- 
+  assert(seen(StateId)) , 
   get_next_states(State, NextStates) , 
   map_get_reachable_states(NextStates, Acc, ReachableStates).
 
 map_get_reachable_states([], Acc, Acc).
 map_get_reachable_states([NextState|T], Acc, ReachableStates) :- 
-  \+ seen(NextState) , 
+  get_attr(NextState, id, StateId) , 
+  \+ seen(StateId) , 
   ! , 
-  get_reachable_states(NextState, Acc, NewAcc) , 
+  get_reachable_states(NextState, StateId, Acc, NewAcc) , 
   map_get_reachable_states(T, [NextState|NewAcc], ReachableStates).
 map_get_reachable_states([_|T], Acc, ReachableStates) :- 
   map_get_reachable_states(T, Acc, ReachableStates).

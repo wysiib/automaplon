@@ -20,7 +20,7 @@
 %   id - unique state id
 %   accept - is true if state is accepting
 %   transitions - a map associating a literal to a list of states, the list might contain duplicates
-%   next_states - a set of states reachable in one step
+%   next_states - an ordered set of states reachable in one step
 
 :- dynamic next_id/1.
 :- volatile next_id/1.
