@@ -65,3 +65,5 @@ test(construction_and_extension_nondet) :-
     TransitionsF == [S2].
 
 :- end_tests(automaton_basic).
+
+% TODO: extend tests

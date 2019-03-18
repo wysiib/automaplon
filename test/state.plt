@@ -182,6 +182,30 @@ test(add_get_transition_backtrackable2,[setup(cleanup_state)]) :-
       get_transitions(S1,b,TransitionsB) , 
       TransitionsB == []).
 
+test(next_states1,[setup(cleanup_state)]) :- 
+    new_state(S1) , 
+    new_state(S2) , 
+    new_state(S3) , 
+    new_state(S4) , 
+    add_transition(S1, [a,b]-S2) , 
+    add_transition(S1, [a,b]-S3) , 
+    add_transition(S1, [a,a]-S4) , 
+    get_next_states(S1, NextStates) , 
+    equal_lists_as_set(NextStates, [S2, S3, S4]).
+
+test(next_states2,[setup(cleanup_state)]) :- 
+    new_state(S1) , 
+    new_state(S2) , 
+    new_state(S3) , 
+    new_state(S4) , 
+    add_transition(S1, [a,b]-S2) , 
+    add_transition(S1, [a,a]-S4) , 
+    add_transition(S2, [a,b]-S3) , 
+    get_next_states(S1, NextStatesS1) , 
+    equal_lists_as_set(NextStatesS1, [S2, S4]) , 
+    get_next_states(S2, NextStatesS2) , 
+    equal_lists_as_set(NextStatesS2, [S3]).
+
 :- end_tests(state_basic).
 
 :- begin_tests(helper_predicates).
