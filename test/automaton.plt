@@ -82,15 +82,63 @@ test(get_states2) :-
     new_automaton(A) , 
     set_deterministic(A, false) , 
     get_initial(A, Initial) , 
-    new_state(S1) , new_state(S2) , new_state(S3) , new_state(S3) , 
+    new_state(S1) , new_state(S2) , new_state(S3) , new_state(S4) , 
     add_transition(Initial, [a,d]-S1) , 
     add_transition(Initial, [e,f]-S2) , 
     add_transition(S1, [g,h]-S3) , 
     add_transition(S3, [a,a]-S1) , 
     add_transition(S3, [a,a]-S2) , 
     add_transition(S3, [a,a]-S3) , 
+    add_transition(S3, [a,a]-S4) , 
     get_states(A, ReachableStates) , 
-    equal_lists_as_set(ReachableStates, [Initial, S1, S2, S3]).
+    equal_lists_as_set(ReachableStates, [Initial, S1, S2, S3, S4]).
+
+test(get_accept_states1) :- 
+    new_automaton(A) , 
+    get_initial(A, Initial) , 
+    new_state(S1) , new_state(S2) , new_state(S3) , 
+    set_accept(S3, true) , 
+    add_transition(Initial, [a,d]-S1) , 
+    add_transition(Initial, [e,f]-S2) , 
+    add_transition(S1, [g,h]-S3) , 
+    get_accept_states(A, ReachableStates) , 
+    ReachableStates == [S3].
+
+test(get_accept_states2) :- 
+    new_automaton(A) , 
+    set_deterministic(A, false) , 
+    get_initial(A, Initial) , 
+    new_state(S1) , new_state(S2) , new_state(S3) , new_state(S4) , 
+    set_accept(Initial, true) , 
+    set_accept(S2, true) , 
+    set_accept(S3, true) , 
+    add_transition(Initial, [a,d]-S1) , 
+    add_transition(Initial, [e,f]-S2) , 
+    add_transition(S1, [g,h]-S3) , 
+    add_transition(S3, [a,a]-S1) , 
+    add_transition(S3, [a,a]-S2) , 
+    add_transition(S3, [a,a]-S3) , 
+    add_transition(S3, [a,a]-S4) , 
+    get_accept_states(A, ReachableStates) , 
+    equal_lists_as_set(ReachableStates, [Initial, S2, S3]).
+
+test(get_accept_states3) :- 
+    new_automaton(A) , 
+    set_deterministic(A, false) , 
+    get_initial(A, Initial) , 
+    new_state(S1) , new_state(S2) , new_state(S3) , new_state(S4) , 
+    add_transition(Initial, [a,d]-S1) , 
+    add_transition(Initial, [e,f]-S2) , 
+    add_transition(S1, [g,h]-S3) , 
+    add_transition(S3, [a,a]-S1) , 
+    add_transition(S3, [a,a]-S2) , 
+    add_transition(S3, [a,a]-S3) , 
+    add_transition(S3, [a,a]-S4) , 
+    get_accept_states(A, ReachableStates) , 
+    ReachableStates == [] , 
+    set_accept(S4, true) , 
+    get_accept_states(A, ReachableStates2) , 
+    ReachableStates2 == [S4].
 
 :- end_tests(automaton_states).
 
