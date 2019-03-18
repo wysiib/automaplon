@@ -139,10 +139,16 @@ add_transition_range([L|Ls], State, Dest) :-
 % L = [a, b, c, d].
 % ===
 literals_list(Min, Max, Literals) :-
-    atom_codes(Min, [AsciiMin]),
-    atom_codes(Max, [AsciiMax]),
-    numlist(AsciiMin, AsciiMax, Asciis),
-    findall(L, (member(A, Asciis), atom_codes(L, [A])), Literals).
+    atom_codes(Min, [AsciiMin]) ,
+    atom_codes(Max, [AsciiMax]) ,
+    numlist(AsciiMin, AsciiMax, Asciis) ,
+    asciis_to_atom_codes(Asciis,D-D,Literals).
+
+asciis_to_atom_codes([], Acc-D, Acc) :- D = [].
+asciis_to_atom_codes([Ascii|T], Acc-D, Literals) :- 
+    atom_codes(Codes,[Ascii]) , 
+    D = [Codes|ND] , 
+    asciis_to_atom_codes(T, Acc-ND, Literals).
 
 %% reset_transitions(+State).
 %
