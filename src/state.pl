@@ -6,6 +6,7 @@
                   get_transitions/2,
                   get_transitions/3,
                   add_transition/2,
+                  add_transition/3,
                   set_accept/2,
                   equals/2,
                   step/3]).
@@ -105,14 +106,14 @@ add_transition(State, [Min,Max]-Destination) :-
 % the Literal.
 add_transition(State, Lit, Destination) :-
     get_transitions(State, Transitions) ,
-    (map_get(Transitions, Lit, Destinations) ; Destinations = []) , % TODO: use a set or difference list if we need to append States more often?
+    (map_get(Transitions, Lit, Destinations) ; Destinations = []) , % TODO: use a set?
     ! , 
     map_assoc(Transitions, Lit, [Destination|Destinations], NewTransitions) , 
     put_attr(State, transitions, NewTransitions).
 
 %% add_transition_range(+State, +Min, +Max, +Dest).
 %
-% Add transitions
+% Add transitions from +State to +Dest for each char between +Min and +Max.
 add_transition_range(State, Min, Max, Dest) :-
     literals_list(Min, Max, Lits),
     add_transition_range(Lits, State, Dest).

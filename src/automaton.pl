@@ -1,4 +1,5 @@
 :- module(automaton, [new_automaton/1,
+                      clone/2,
                       get_initial/2, 
                       set_initial/2,
                       get_singleton/2,
@@ -117,9 +118,10 @@ get_reachable_and_accept_states(Automaton, [Initial|ReachableStates], AcceptStat
   retractall(seen(_)) , 
   add_state_to_list_if_accepting(Initial, TempAcceptStates, AcceptStates).
 
-get_reachable_and_accept_states(_, StateId, ReachableAcc, ReachableAcc, AcceptAcc, AcceptAcc) :- 
+get_reachable_and_accept_states(_, StateId, ReachableAcc, ReachableAcc, AcceptAcc, NewAcc) :- 
   seen(StateId) , 
-  !.
+  ! , 
+  NewAcc = AcceptAcc.
 get_reachable_and_accept_states(State, StateId, Acc, ReachableStates, AcceptAcc, AcceptStates) :- 
   assert(seen(StateId)) , 
   get_next_states(State, NextStates) , 
@@ -136,9 +138,10 @@ map_get_reachable_and_accept_states([NextState|T], ReachableAcc, ReachableStates
 map_get_reachable_and_accept_states([_|T], ReachableAcc, ReachableStates, AcceptAcc, AcceptStates) :- 
   map_get_reachable_and_accept_states(T, ReachableAcc, ReachableStates, AcceptAcc, AcceptStates).
 
-add_state_to_list_if_accepting(State, List, [State|List]) :- 
+add_state_to_list_if_accepting(State, List, NewList) :- 
   is_accept(State) , 
-  !.
+  ! , 
+  NewList = [State|List].
 add_state_to_list_if_accepting(_, List, List).
 
 %% get_number_of_states(+Automaton, -States).
@@ -152,11 +155,13 @@ get_number_of_states(Automaton, AmountOfStates) :-
 %
 % Return a set of live states. A state is live if it can reach an accepting state.
 get_live_states(Automaton, LiveStates) :- 
+  expand_singleton(Automaton) , 
   get_reachable_and_accept_states(Automaton, ReachableStates, AcceptStates) , 
   get_live_states(ReachableStates, AcceptStates, LiveStates).
 
-get_live_states(_, [], []) :- 
-  !. % no live states if no accepting states
+get_live_states(_, [], LiveStates) :- 
+  ! , % no live states if no accepting states
+  LiveStates = [].
 get_live_states(ReachableStates, AcceptStates, LiveStates) :- 
   empty_map(BackwardPathMap) , 
   init_backward_path_map_for_states(ReachableStates, BackwardPathMap, BackwardPathMap2) , 
@@ -194,3 +199,69 @@ init_backward_path_map_for_state_and_next_states(ReachableState, [NextState|T], 
     map_assoc(BackwardPathMap, NextStateId, [ReachableState|SetOfStates], TempBackwardPathMap)
   ; map_assoc(BackwardPathMap, NextStateId, [ReachableState], TempBackwardPathMap)) , 
   init_backward_path_map_for_state_and_next_states(ReachableState, T, TempBackwardPathMap, NewBackwardPathMap).
+
+clone(Automaton, ClonedAutomaton) :- 
+  get_initial(Automaton, Initial) , 
+  get_minimise_always(Automaton, MinimiseAlways),
+  get_deterministic(Automaton, Deterministic),
+  get_singleton(Automaton, Singleton) , 
+  get_states(Automaton, States) , 
+  new_automaton(ClonedAutomaton) , 
+  set_minimise_always(ClonedAutomaton, MinimiseAlways) , 
+  set_deterministic(ClonedAutomaton, Deterministic) , 
+  set_singleton(ClonedAutomaton, Singleton) , 
+  map_states_to_fresh_states(States, StatesMap) , 
+  clone_transitions_to_fresh_states(States, StatesMap) , 
+  get_id(Initial, InitialId) , 
+  map_get(StatesMap, InitialId, ClonedInitial) , 
+  set_initial(ClonedAutomaton, ClonedInitial).
+
+clone_transitions_to_fresh_states([], _).
+clone_transitions_to_fresh_states([State|T], StatesMap) :- 
+  get_id(State, StateId) , 
+  map_get(StatesMap, StateId, ClonedState) , 
+  get_transitions(State, Transitions) , % Note: bottleneck for performance since we expanded the char ranges in states.pl
+  dict_pairs(Transitions, transitions, KeyValueList) , 
+  clone_transitions_to_fresh_state(ClonedState, KeyValueList, StatesMap) , 
+  clone_transitions_to_fresh_states(T, StatesMap).
+
+clone_transitions_to_fresh_state(_, [], _).
+clone_transitions_to_fresh_state(ClonedState, [Lit-Destinations|T], StatesMap) :- 
+  add_transitions_to_fresh_state(Destinations, ClonedState, Lit, StatesMap) , 
+  clone_transitions_to_fresh_state(ClonedState, T, StatesMap).
+
+add_transitions_to_fresh_state([], _, _, _).
+add_transitions_to_fresh_state([Destination|T], ClonedState, Lit, StatesMap) :- 
+  get_id(Destination, StateId) , 
+  map_get(StatesMap, StateId, ClonedState) , 
+  ! , 
+  add_transition(ClonedState, Lit, Destination) , 
+  add_transitions_to_fresh_state(T, ClonedState, Lit, StatesMap).
+add_transitions_to_fresh_state([_|T], ClonedState, Lit, StatesMap) :- 
+  % dead states are removed when cloning
+  add_transitions_to_fresh_state(T, ClonedState, Lit, StatesMap).
+
+% We need new State variables before cloning the transitions 
+% since they point to attributed state variables.
+map_states_to_fresh_states(States, StatesMap) :- 
+  empty_map(EmptyMap) , 
+  map_states_to_fresh_states(States, EmptyMap, StatesMap).
+
+map_states_to_fresh_states([], Acc, Acc).
+map_states_to_fresh_states([State|T], Acc, StatesMap) :- 
+  get_id(State, StateId) , 
+  new_state(ClonedState) , 
+  map_assoc(Acc, StateId, ClonedState, NewAcc) , 
+  map_states_to_fresh_states(T, NewAcc, StatesMap).
+
+% TODO:
+
+remove_dead_transitions(Automaton) :- Automaton = Automaton.
+
+expand_singleton(Automaton) :- Automaton = Automaton.
+
+get_number_of_transitions(Automaton) :- Automaton = Automaton.
+
+shuffle(Automaton) :- Automaton = Automaton.
+
+% Skipped public Methods: toDot(), toString(), load(), store()
