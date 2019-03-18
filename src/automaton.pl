@@ -8,9 +8,11 @@
                       get_info/2,
                       set_info/2,
                       get_minimise_always/2,
-                      set_minimise_always/2]).
+                      set_minimise_always/2, 
+                      get_states/2]).
 
 :- use_module(state).
+:- use_module(util/maps).
 
 % Variable Attributes:
 %   initial - an initial State
@@ -88,3 +90,32 @@ set_info(Automaton, Info) :-
 % Return info list attribute.
 get_info(Automaton, Info) :-
     get_attr(Automaton, info, Info).
+
+:- dynamic seen/1.
+:- volatile seen/1.
+
+%% get_states(+Automaton, -States).
+%
+% Get all states by exploring the intial state exhaustively.
+get_states(Automaton, ReachableStates) :- 
+    get_initial(Automaton, Initial) , 
+    %retractall(seen(_)) , 
+    get_reachable_states(Initial, [], ReachableStates) , 
+    retractall(seen(_)).
+
+get_reachable_states(Initial, Acc, Acc) :- 
+  get_attr(Initial, id, Id) , 
+  seen(Id) , 
+  !.
+get_reachable_states(Initial, Acc, ReachableStates) :- 
+  get_next_states(State, NextStates) , 
+  map_get_reachable_states(NextStates, Acc, ReachableStates).
+
+map_get_reachable_states([], Acc, Acc).
+map_get_reachable_states([NextState|T], Acc, ReachableStates) :- 
+  \+ seen(NextState) , 
+  ! , 
+  get_reachable_states(NextState, Acc, NewAcc) , 
+  map_get_reachable_states(T, [NextState|NewAcc], ReachableStates).
+map_get_reachable_states([_|T], Acc, ReachableStates) :- 
+  map_get_reachable_states(T, Acc, ReachableStates).
