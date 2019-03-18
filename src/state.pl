@@ -1,13 +1,15 @@
 :- module(state, [new_state/1,
                   is_accept/1,
+                  get_next_states/2,
                   get_transitions/2,
-                  get_transitions/3 ,
+                  get_transitions/3,
                   add_transition/2,
                   set_accept/2,
-                  step/3,
-                  equals/2]).
+                  equals/2,
+                  step/3]).
 
 :- use_module(util/maps).
+:- use_module(library(ordsets)).
 
 % Note: - skipped attribute 'int number'
 %       - skipped methods 'compareTo', 'toString' and all methods that are not public
@@ -18,6 +20,7 @@
 %   id - unique state id
 %   accept - is true if state is accepting
 %   transitions - a map associating a literal to a list of states, the list might contain duplicates
+%   next_states - a set of states reachable in one step
 
 :- dynamic next_id/1.
 :- volatile next_id/1.
@@ -34,7 +37,14 @@ get_next_id(N) :-
 % Instantiates a fresh automaton state.
 new_state(State) :-
     get_next_id(NextId),
-    put_attr(State,id,NextId).
+    put_attr(State, id, NextId) , 
+    put_attr(State, next_states, []).
+
+%% get_next_states(+State, -NextStates).
+% 
+% Return the set of states reachable in one step.
+get_next_states(State, NextStates) :- 
+    get_attr(State, next_states, NextStates).
 
 %% get_transitions(+State, -Transitions).
 %
@@ -42,16 +52,16 @@ new_state(State) :-
 % which lead away from State.
 % The output variable Transitions might be unified with an empty data structure
 % If no transitions are attached to the State.
-get_transitions(State,Transitions) :-
-    get_attr(State,transitions,Transitions) ,
+get_transitions(State, Transitions) :-
+    get_attr(State, transitions, Transitions) ,
     !.
-get_transitions(_,transitions{}).
+get_transitions(_, transitions{}).
 
 %% get_transitions(+State, +Literal, -DestinationStates).
 %
 % Return a list of destination states reachable from State by transitioning
 % with Literal.
-get_transitions(State,Lit,Destinations) :-
+get_transitions(State, Lit, Destinations) :-
     step(State, Lit, Destinations).
 
 %% step(+State, +Literal, -DestinationStates) is det.
@@ -60,11 +70,11 @@ get_transitions(State,Lit,Destinations) :-
 % with Literal.
 % If no state is reachable by the specified literal the resulting list will
 % be empty.
-step(State,Lit,Destinations) :-
-    get_transitions(State,Transitions) ,
+step(State, Lit, Destinations) :-
+    get_transitions(State, Transitions) ,
     map_get(Transitions, Lit, Destinations) ,
     !.
-step(_,_,[]).
+step(_, _, []).
 
 %% add_transition(+State, +Transition).
 %
@@ -75,19 +85,22 @@ step(_,_,[]).
 %
 % For instance, =|add_transition(S1, [a,d]-S2)|= allows to transition from
 % state S1 to S2 with either literal from a to d.
-add_transition(State,[Min,Max]-Destination) :-
-    add_transition_range(State,Min,Max,Destination).
+add_transition(State, [Min,Max]-Destination) :-
+    add_transition_range(State, Min, Max, Destination) , 
+    get_attr(State, next_states, OldNextStates) , 
+    ord_add_element(OldNextStates, Destination, NewNextStates) , 
+    put_attr(State, next_states, NewNextStates).
 
 %% add_transition(+State, +Literal, +Destination).
 %
 % Add a single transition to the Destination state from State by using
 % the Literal.
-add_transition(State,Lit,Destination) :-
-    get_transitions(State,Transitions) ,
-    (map_get(Transitions,Lit,Destinations) ; Destinations = []) , 
+add_transition(State, Lit, Destination) :-
+    get_transitions(State, Transitions) ,
+    (map_get(Transitions, Lit, Destinations) ; Destinations = []) , % TODO: use a set or difference list if we need to append States more often?
     ! , 
-    map_assoc(Transitions,Lit,[Destination|Destinations],NewTransitions) , % TODO: use a set for Destinations?
-    put_attr(State,transitions,NewTransitions).
+    map_assoc(Transitions, Lit, [Destination|Destinations], NewTransitions) , 
+    put_attr(State, transitions, NewTransitions).
 
 %% add_transition_range(+State, +Min, +Max, +Dest).
 %
