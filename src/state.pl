@@ -1,5 +1,6 @@
 :- module(state, [new_state/1,
                   is_accept/1,
+                  reset_transitions/1,
                   get_next_states/2,
                   get_transitions/2,
                   get_transitions/3,
@@ -140,7 +141,8 @@ literals_list(Min, Max, Literals) :-
 %
 % Remove all transitions attached to State.
 reset_transitions(State) :-
-    put_attr(State, transitions, transitions{}).
+    put_attr(State, transitions, transitions{}) , 
+    put_attr(State, next_states, []).
 
 %% set_accept(+State, +Accept).
 %
