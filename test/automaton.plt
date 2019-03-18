@@ -166,6 +166,29 @@ test(get_accept_states4) :-
     get_number_of_states(A, AmountOfStates2) , 
     AmountOfStates2 == 1.
 
+test(number_of_states) :- 
+    new_automaton(A) , 
+    set_deterministic(A, false) , 
+    get_number_of_states(A, AmountOfStates) , 
+    AmountOfStates == 1 , 
+    new_state(S1) , new_state(S2) , 
+    get_initial(A, Initial) , 
+    add_transition(Initial, [a,b]-Initial) , 
+    get_number_of_states(A, AmountOfStates2) , 
+    AmountOfStates2 == 1 , 
+    add_transition(Initial, [a,b]-S1) , 
+    get_number_of_states(A, AmountOfStates3) , 
+    AmountOfStates3 == 2 , 
+    add_transition(S1, [a,b]-S2) , 
+    get_number_of_states(A, AmountOfStates4) , 
+    AmountOfStates4 == 3 , 
+    add_transition(S2, [a,b]-Initial) , 
+    get_number_of_states(A, AmountOfStates5) , 
+    AmountOfStates5 == 3 , 
+    reset_transitions(Initial) , 
+    get_number_of_states(A, AmountOfStates6) , 
+    AmountOfStates6 == 1.
+
 :- end_tests(automaton_states).
 
 % TODO: extend tests
