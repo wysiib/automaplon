@@ -430,3 +430,42 @@ test(remove_dead_transitions4) :-
     StatesA2 == [Initial, S1].
 
 :- end_tests(remove_dead_transitions).
+
+:- begin_tests(singleton_automaton).
+
+test(singleton_automaton_get_states_expands_singleton) :- 
+    new_automaton(A) , 
+    set_singleton(A, 'test') , 
+    get_number_of_states(A, NrOfStates) , 
+    NrOfStates == 5.
+
+test(expand_singleton_automaton1) :- 
+    new_automaton(A) , 
+    set_singleton(A, 'test') , 
+    is_singleton(A) , 
+    expand_singleton(A) , 
+    get_number_of_states(A, NrOfStates) , 
+    NrOfStates == 5.
+
+test(expand_singleton_automaton2) :- 
+    new_automaton(A) , 
+    set_singleton(A, 'a larger singleton test') , 
+    is_singleton(A) , 
+    expand_singleton(A) , 
+    get_number_of_states(A, NrOfStates) , 
+    NrOfStates == 24.
+
+test(expand_singleton_overwrites_automaton) :- 
+    new_automaton(A) , 
+    get_initial(A, Initial) , 
+    new_state(S1) , new_state(S2) , 
+    add_transition(Initial, [a,a]-S1) , 
+    add_transition(S1, [b,b]-S2) , 
+    \+ is_singleton(A) , 
+    set_singleton(A, 'test') , 
+    is_singleton(A) , 
+    expand_singleton(A) , 
+    get_number_of_states(A, NrOfStates) , 
+    NrOfStates == 5.
+
+:- end_tests(singleton_automaton).
