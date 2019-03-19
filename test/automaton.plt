@@ -302,7 +302,6 @@ test(clone2) :-
     add_transition(S1, [e,f]-S3) , 
     add_transition(S2, [a,z]-S3) , 
     add_transition(S2, [a,h]-S4) , 
-    add_transition(S2, [a,h]-S4) , 
     clone(A, C) , 
     % different attributed state variables 
     get_initial(A, InitialA) , 
@@ -330,3 +329,80 @@ test(clone2) :-
 % TODO: more tests
 
 :- end_tests(automaton_clone).
+
+:- begin_tests(remove_dead_transitions).
+
+test(remove_dead_transitions1) :- 
+    new_automaton(A) , 
+    get_initial(A, Initial) , 
+    new_state(S1) , new_state(S2) , new_state(S3) , new_state(S4) , 
+    add_transition(Initial, [a,f]-S1) , 
+    add_transition(Initial, [g,j]-S2) , 
+    add_transition(Initial, [a,b]-S3) , 
+    add_transition(S1, [a,d]-S2) , 
+    add_transition(S1, [e,f]-S3) , 
+    add_transition(S2, [a,z]-S3) , 
+    add_transition(S2, [a,h]-S4) , 
+    get_states(A, StatesA) , 
+    equal_lists_as_set(StatesA, [Initial, S1, S2, S3, S4]) , 
+    remove_dead_transitions(A) , 
+    get_states(A, StatesA2) , 
+    StatesA2 == [Initial].
+
+test(remove_dead_transitions2) :- 
+    new_automaton(A) , 
+    get_initial(A, Initial) , 
+    new_state(S1) , new_state(S2) , new_state(S3) , new_state(S4) , 
+    add_transition(Initial, [a,f]-S1) , 
+    add_transition(Initial, [g,j]-S2) , 
+    add_transition(Initial, [a,b]-S3) , 
+    add_transition(S1, [a,d]-S2) , 
+    add_transition(S1, [e,f]-S3) , 
+    add_transition(S2, [a,z]-S3) , 
+    add_transition(S2, [a,h]-S4) , 
+    add_transition(S3, [a,a]-S4) , 
+    set_accept(S3, true) , 
+    get_states(A, StatesA) , 
+    equal_lists_as_set(StatesA, [Initial, S1, S2, S3, S4]) , 
+    remove_dead_transitions(A) , 
+    get_states(A, StatesA2) , 
+    StatesA2 == [Initial, S1, S2, S3].
+
+test(remove_dead_transitions3) :- 
+    new_automaton(A) , 
+    get_initial(A, Initial) , 
+    new_state(S1) , new_state(S2) , new_state(S3) , new_state(S4) , 
+    add_transition(Initial, [a,f]-S1) , 
+    add_transition(Initial, [g,j]-S2) , 
+    add_transition(Initial, [a,b]-S3) , 
+    add_transition(S1, [a,d]-S2) , 
+    add_transition(S1, [e,f]-S3) , 
+    add_transition(S2, [a,z]-S3) , 
+    add_transition(S2, [a,h]-S4) , 
+    add_transition(S2, [a,h]-S4) , 
+    set_accept(S2, true) , 
+    get_states(A, StatesA) , 
+    equal_lists_as_set(StatesA, [Initial, S1, S2, S3, S4]) , 
+    remove_dead_transitions(A) , 
+    get_states(A, StatesA2) , 
+    StatesA2 == [Initial, S1, S2].
+
+test(remove_dead_transitions4) :- 
+    new_automaton(A) , 
+    get_initial(A, Initial) , 
+    new_state(S1) , new_state(S2) , new_state(S3) , new_state(S4) , 
+    add_transition(Initial, [a,f]-S1) , 
+    add_transition(Initial, [g,j]-S2) , 
+    add_transition(Initial, [a,b]-S3) , 
+    add_transition(S1, [a,d]-S2) , 
+    add_transition(S1, [e,f]-S3) , 
+    add_transition(S2, [a,z]-S3) , 
+    add_transition(S3, [a,a]-S4) , 
+    set_accept(S1, true) , 
+    get_states(A, StatesA) , 
+    equal_lists_as_set(StatesA, [Initial, S1, S2, S3, S4]) , 
+    remove_dead_transitions(A) , 
+    get_states(A, StatesA2) , 
+    StatesA2 == [Initial, S1].
+
+:- end_tests(remove_dead_transitions).
