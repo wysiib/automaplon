@@ -353,7 +353,6 @@ map_get_number_of_transitions([_-Destinations|T], AccNr, NrOfTransitions) :-
   NewAccNr is AccNr + Len , 
   map_get_number_of_transitions(T, NewAccNr, NrOfTransitions).
 
-
 %% expand_singleton(+Automaton).
 %
 % Expand singleton representation to normal representation. 
@@ -381,11 +380,7 @@ expand_singleton_from_codes([Code|T], Predecessor) :-
   add_transition(Predecessor, [Char,Char]-InnerState) , 
   expand_singleton_from_codes(T, Predecessor).
 
-% TODO:
-
-shuffle(Automaton) :- Automaton = Automaton.
-
 % do we need this if we expand ranges? is it a good idea to expand ranges (see state.pl)?
 reduce(Automaton) :- Automaton = Automaton.
 
-% Skipped public Methods: toDot(), toString(), load(), store()
+% Skipped public Methods of original Java library: toDot(), toString(), load(), store()

@@ -6,7 +6,7 @@ Port of the [dk.brics.automaton](https://github.com/cs-au-dk/dk.brics.automaton)
 
 Overview of ported classes
 
-* [ ] Automaton
+* [X] Automaton
 * [ ] AutomatonMatcher
 * [X] ~~*AutomatonProvider*~~ [2019-03-14]
   * Note: In the original Java library, this is an interface.
