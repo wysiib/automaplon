@@ -6,8 +6,8 @@ Port of the [dk.brics.automaton](https://github.com/cs-au-dk/dk.brics.automaton)
 
 Overview of ported classes
 
-* [X] Automaton
-  * Note: Original Java implementation held a Unicode interval and a destination which could be 
+* [X] Automaton [2019-03-17]
+  * Note: The original Java implementation held a Unicode interval and a destination for transitions which could be 
     reduced by combining overlapping intervals of adjacent states. Since we unfold ranges (see ~~*Transition*~~), 
     Automaton#reduce() is not ported.
 * [ ] AutomatonMatcher
@@ -29,7 +29,7 @@ Overview of ported classes
     Does not need porting.
 * [ ] StringUnionOperations
 * [X] ~~*Transition*~~ [2019-03-08]
-  * Note: Original Java implementation held a Unicode interval and a destination
+  * Note: The original Java implementation held a Unicode interval and a destination
     state.
     Our implementation realises transitions as maps having the literals as keys
     and destination states as values.
