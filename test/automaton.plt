@@ -78,7 +78,9 @@ test(get_states1) :-
     get_states(A, ReachableStates) , 
     equal_lists_as_set(ReachableStates, [Initial, S1, S2, S3]) , 
     get_number_of_states(A, AmountOfStates) , 
-    AmountOfStates == 4.
+    AmountOfStates == 4 , 
+    get_number_of_transitions(A, AmountOfTransitions) , 
+    AmountOfTransitions == 8.
 
 test(get_states2) :- 
     new_automaton(A) , 
@@ -95,7 +97,9 @@ test(get_states2) :-
     get_states(A, ReachableStates) , 
     equal_lists_as_set(ReachableStates, [Initial, S1, S2, S3, S4]) , 
     get_number_of_states(A, AmountOfStates) , 
-    AmountOfStates == 5.
+    AmountOfStates == 5 , 
+    get_number_of_transitions(A, AmountOfTransitions) , 
+    AmountOfTransitions == 12.
 
 test(get_accept_states1) :- 
     new_automaton(A) , 
@@ -108,7 +112,9 @@ test(get_accept_states1) :-
     get_accept_states(A, ReachableAcceptStates) , 
     ReachableAcceptStates == [S3] , 
     get_number_of_states(A, AmountOfStates) , 
-    AmountOfStates == 4.
+    AmountOfStates == 4 , 
+    get_number_of_transitions(A, AmountOfTransitions) , 
+    AmountOfTransitions == 8.
 
 test(get_accept_states2) :- 
     new_automaton(A) , 
@@ -128,7 +134,9 @@ test(get_accept_states2) :-
     get_accept_states(A, ReachableAcceptStates) , 
     equal_lists_as_set(ReachableAcceptStates, [Initial, S2, S3]) , 
     get_number_of_states(A, AmountOfStates) , 
-    AmountOfStates == 5.
+    AmountOfStates == 5 , 
+    get_number_of_transitions(A, AmountOfTransitions) , 
+    AmountOfTransitions == 12.
 
 test(get_accept_states3) :- 
     new_automaton(A) , 
@@ -150,7 +158,9 @@ test(get_accept_states3) :-
     get_accept_states(A, ReachableAcceptStates2) , 
     ReachableAcceptStates2 == [S4] , 
     get_number_of_states(A, AmountOfStates2) , 
-    AmountOfStates2 == 5.
+    AmountOfStates2 == 5 , 
+    get_number_of_transitions(A, AmountOfTransitions) , 
+    AmountOfTransitions == 12.
 
 test(get_accept_states4) :- 
     new_automaton(A) , 
@@ -164,30 +174,44 @@ test(get_accept_states4) :-
     get_accept_states(A, ReachableAcceptStates2) , 
     ReachableAcceptStates2 == [Initial] , 
     get_number_of_states(A, AmountOfStates2) , 
-    AmountOfStates2 == 1.
+    AmountOfStates2 == 1 , 
+    get_number_of_transitions(A, AmountOfTransitions) , 
+    AmountOfTransitions == 26.
 
 test(number_of_states) :- 
     new_automaton(A) , 
     set_deterministic(A, false) , 
     get_number_of_states(A, AmountOfStates) , 
     AmountOfStates == 1 , 
+    get_number_of_transitions(A, AmountOfTransitions) , 
+    AmountOfTransitions == 0 , 
     new_state(S1) , new_state(S2) , 
     get_initial(A, Initial) , 
     add_transition(Initial, [a,b]-Initial) , 
     get_number_of_states(A, AmountOfStates2) , 
     AmountOfStates2 == 1 , 
+    get_number_of_transitions(A, AmountOfTransitions2) , 
+    AmountOfTransitions2 == 2 , 
     add_transition(Initial, [a,b]-S1) , 
     get_number_of_states(A, AmountOfStates3) , 
     AmountOfStates3 == 2 , 
+    get_number_of_transitions(A, AmountOfTransitions3) , 
+    AmountOfTransitions3 == 4 , 
     add_transition(S1, [a,b]-S2) , 
     get_number_of_states(A, AmountOfStates4) , 
     AmountOfStates4 == 3 , 
+    get_number_of_transitions(A, AmountOfTransitions4) , 
+    AmountOfTransitions4 == 6 , 
     add_transition(S2, [a,b]-Initial) , 
     get_number_of_states(A, AmountOfStates5) , 
     AmountOfStates5 == 3 , 
+    get_number_of_transitions(A, AmountOfTransitions5) , 
+    AmountOfTransitions5 == 8 , 
     reset_transitions(Initial) , 
     get_number_of_states(A, AmountOfStates6) , 
-    AmountOfStates6 == 1.
+    AmountOfStates6 == 1 , 
+    get_number_of_transitions(A, AmountOfTransitions6) , 
+    AmountOfTransitions6 == 0.
 
 test(live_states1) :- 
     new_automaton(A) , 
