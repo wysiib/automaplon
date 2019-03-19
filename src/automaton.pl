@@ -1,4 +1,5 @@
 :- module(automaton, [new_automaton/1,
+                      remove_dead_transitions/1,
                       clone/2,
                       get_initial/2, 
                       set_initial/2,
@@ -64,6 +65,13 @@ set_deterministic(Automaton, Deterministic) :-
 % Returns an atom (singleton string) if the automaton is singleton, otherwise null.
 get_singleton(Automaton, Singleton) :-
     get_attr(Automaton, singleton, Singleton).
+
+%% is_singleton(+Automaton).
+%
+% True if the automaton is singleton, i.e., the attribute singleton is not null.
+is_singleton(Automaton) :-
+    get_attr(Automaton, singleton, Singleton) , 
+    Singleton \== null.
 
 %% set_singleton(+Automaton, +Singleton).
 %
@@ -159,6 +167,9 @@ get_live_states(Automaton, LiveStates) :-
   get_reachable_and_accept_states(Automaton, ReachableStates, AcceptStates) , 
   get_live_states(ReachableStates, AcceptStates, LiveStates).
 
+%% get_live_states(+ReachableStates, +AcceptStates, -LiveStates).
+%
+% Return a set of live states for given reachable and accept states.
 get_live_states(_, [], LiveStates) :- 
   ! , % no live states if no accepting states
   LiveStates = [].
@@ -168,6 +179,9 @@ get_live_states(ReachableStates, AcceptStates, LiveStates) :-
   % all accepting states are live and each state reaching a live state is live as well
   get_live_states_from_accepting_states(AcceptStates, BackwardPathMap2, AcceptStates, LiveStates).
 
+%% get_live_states_from_accepting_states(+AcceptStates, +BackwardPathMap, +Acc, -LiveStates).
+%
+% Return a set of live states for given accept states and an initialised backward path map.
 % Each state we find when exploring the backward path starting at accepting states is live as well.
 get_live_states_from_accepting_states([], _, Acc, Acc).
 get_live_states_from_accepting_states([State|WorkListRest], BackwardPathMap, Acc, LiveStates) :- 
@@ -200,6 +214,9 @@ init_backward_path_map_for_state_and_next_states(ReachableState, [NextState|T], 
   ; map_assoc(BackwardPathMap, NextStateId, [ReachableState], TempBackwardPathMap)) , 
   init_backward_path_map_for_state_and_next_states(ReachableState, T, TempBackwardPathMap, NewBackwardPathMap).
 
+%% clone(+Automaton, -ClonedAutomaton).
+%
+% Returns a cloned automaton (deep copy).
 clone(Automaton, ClonedAutomaton) :- 
   get_initial(Automaton, Initial) , 
   get_minimise_always(Automaton, MinimiseAlways),
@@ -216,6 +233,10 @@ clone(Automaton, ClonedAutomaton) :-
   map_get(StatesMap, InitialId, ClonedInitial) , 
   set_initial(ClonedAutomaton, ClonedInitial).
 
+%% clone_transitions_to_fresh_states(+States, +StatesMap).
+%
+% Clone the transitions of each state in the first argument's list to the 
+% cloned states in the second argument's map.
 clone_transitions_to_fresh_states([], _).
 clone_transitions_to_fresh_states([State|T], StatesMap) :- 
   get_id(State, StateId) , 
@@ -225,6 +246,10 @@ clone_transitions_to_fresh_states([State|T], StatesMap) :-
   clone_transitions_to_fresh_state(ClonedState, KeyValueList, StatesMap) , 
   clone_transitions_to_fresh_states(T, StatesMap).
 
+%% clone_transitions_to_fresh_state(+ClonedState, +Transitions, +StatesMap).
+%
+% Clone the transitions given in the second argument to the cloned state given in the first argument. 
+% The map of cloned states is used to point cloned transitions to cloned states instead of the original ones.
 clone_transitions_to_fresh_state(_, [], _).
 clone_transitions_to_fresh_state(ClonedState, [Lit-Destinations|T], StatesMap) :- 
   add_transitions_to_fresh_state(Destinations, ClonedState, Lit, StatesMap) , 
@@ -241,6 +266,9 @@ add_transitions_to_fresh_state([_|T], ClonedState, Lit, StatesMap) :-
   % dead states are removed when cloning
   add_transitions_to_fresh_state(T, ClonedState, Lit, StatesMap).
 
+%% map_states_to_fresh_states(+States, -StatesMap).
+%
+% Create a map pointing ids of the original states to cloned (empty) states. 
 % We need new State variables before cloning the transitions 
 % since they point to attributed state variables.
 map_states_to_fresh_states(States, StatesMap) :- 
@@ -256,12 +284,50 @@ map_states_to_fresh_states([State|T], Acc, StatesMap) :-
 
 % TODO:
 
-remove_dead_transitions(Automaton) :- Automaton = Automaton.
+%% remove_dead_transitions(+Automaton).
+%
+% Removes all transitions to dead states. A state is dead if no accept state 
+% is reachable from it.
+remove_dead_transitions(Automaton) :- 
+  % a singleton automaton is not expanded yet and, thus, does not have dead states
+  is_singleton(Automaton) , 
+  !.
+remove_dead_transitions(Automaton) :- 
+  get_reachable_and_accept_states(Automaton, ReachableStates, AcceptStates) , 
+  get_live_states(ReachableStates, AcceptStates, LiveStates) , 
+  remove_dead_transitions_from_states(ReachableStates, LiveStates) , 
+  reduce(Automaton).
+
+remove_dead_transitions_from_states([], _).
+remove_dead_transitions_from_states([State|T], LiveStates) :- 
+  get_transitions(State, Transitions) , 
+  dict_pairs(Transitions, transitions, KeyValueList) , 
+  reset_transitions(State) , 
+  add_live_transitions_to_state(State, KeyValueList, LiveStates) , 
+  remove_dead_transitions_from_states(T, LiveStates).
+
+add_live_transitions_to_state(_, [], _).
+add_live_transitions_to_state(State, [Lit-Destinations|T], LiveStates) :- 
+  add_live_transitions_to_state(State, Lit, Destinations, LiveStates) , ! , 
+  add_live_transitions_to_state(State, T, LiveStates).
+
+add_live_transitions_to_state(_, _, [], _).
+add_live_transitions_to_state(State, Lit, [Destination|T], LiveStates) :- 
+  member(Destination, LiveStates) , % TODO: improve performance
+  ! , 
+  add_transition(State, [Lit,Lit]-Destination) , 
+  add_live_transitions_to_state(State, Lit, T, LiveStates).
+add_live_transitions_to_state(State, Lit, [_|T], LiveStates) :- 
+  % transition leads to a dead state
+  add_live_transitions_to_state(State, Lit, T, LiveStates).
 
 expand_singleton(Automaton) :- Automaton = Automaton.
 
 get_number_of_transitions(Automaton) :- Automaton = Automaton.
 
 shuffle(Automaton) :- Automaton = Automaton.
+
+% do we need this if we expand ranges? is it a good idea to expand ranges (see state.pl)?
+reduce(Automaton) :- Automaton = Automaton.
 
 % Skipped public Methods: toDot(), toString(), load(), store()
