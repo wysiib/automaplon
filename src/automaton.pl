@@ -14,6 +14,7 @@
                       get_states/2, 
                       get_accept_states/2, 
                       get_number_of_states/2,
+                      get_number_of_transitions/2,
                       get_live_states/2]).
 
 :- use_module(state).
@@ -282,8 +283,6 @@ map_states_to_fresh_states([State|T], Acc, StatesMap) :-
   map_assoc(Acc, StateId, ClonedState, NewAcc) , 
   map_states_to_fresh_states(T, NewAcc, StatesMap).
 
-% TODO:
-
 %% remove_dead_transitions(+Automaton).
 %
 % Removes all transitions to dead states. A state is dead if no accept state 
@@ -321,9 +320,38 @@ add_live_transitions_to_state(State, Lit, [_|T], LiveStates) :-
   % transition leads to a dead state
   add_live_transitions_to_state(State, Lit, T, LiveStates).
 
-expand_singleton(Automaton) :- Automaton = Automaton.
+%% get_number_of_transitions(+Automaton, -NrOfTransitions).
+%
+% Return the amount of transitions in the automaton.
+% Note: Since we unfolded char ranges for transitions in state.pl, 
+% get_number_of_transitions/2 returns a different value than the 
+% original Java library.
+get_number_of_transitions(Automaton, NrOfTransitions) :- 
+  get_singleton(Automaton, Singleton) , 
+  Singleton \== null , 
+  ! , 
+  atom_length(Singleton, NrOfTransitions).
+get_number_of_transitions(Automaton, NrOfTransitions) :- 
+  get_states(Automaton, States) , 
+  get_number_of_transitions(States, 0, NrOfTransitions).
 
-get_number_of_transitions(Automaton) :- Automaton = Automaton.
+get_number_of_transitions([], Acc, Acc).
+get_number_of_transitions([State|T], C, NrOfTransitions) :- 
+  get_transitions(State, Transitions) , 
+  dict_pairs(Transitions, transitions, KeyValueList) , 
+  map_get_number_of_transitions(KeyValueList, 0, AccNr) , 
+  C1 is C + AccNr , 
+  get_number_of_transitions(T, C1, NrOfTransitions).
+
+map_get_number_of_transitions([], AccNr, AccNr).
+map_get_number_of_transitions([_-Destinations|T], AccNr, NrOfTransitions) :- 
+  length(Destinations, Len) , 
+  NewAccNr is AccNr + Len , 
+  map_get_number_of_transitions(T, NewAccNr, NrOfTransitions).
+
+% TODO:
+
+expand_singleton(Automaton) :- Automaton = Automaton.
 
 shuffle(Automaton) :- Automaton = Automaton.
 
