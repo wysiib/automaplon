@@ -1,5 +1,6 @@
 :- module(automaton, [new_automaton/1,
                       is_singleton/1,
+                      is_deterministic/1,
                       expand_singleton/1,
                       remove_dead_transitions/1,
                       clone/2,
@@ -37,7 +38,7 @@ new_automaton(Automaton) :-
     set_initial(Automaton, State),
     set_minimise_always(Automaton, true),
     set_deterministic(Automaton, true),
-    set_singleton(Automaton, null).
+    set_singleton(Automaton, null). % TODO: do not use the atom 'null'
 
 %% get_initial(+Automaton, -Initial).
 %
@@ -56,6 +57,13 @@ set_initial(Automaton, Initial) :-
 % Returns true if automaton is deterministic.
 get_deterministic(Automaton, Deterministic) :-
     get_attr(Automaton, deterministic, Deterministic).
+
+%% is_deterministic(+Automaton).
+%
+% True if automaton is deterministic.
+is_deterministic(Automaton) :- 
+  get_attr(Automaton, deterministic, Deterministic) , 
+  Deterministic == true.
 
 %% set_deterministic(+Automaton, +Deterministic).
 %
@@ -298,8 +306,8 @@ remove_dead_transitions(Automaton) :-
 remove_dead_transitions(Automaton) :- 
   get_reachable_and_accept_states(Automaton, ReachableStates, AcceptStates) , 
   get_live_states(ReachableStates, AcceptStates, LiveStates) , 
-  remove_dead_transitions_from_states(ReachableStates, LiveStates) , 
-  reduce(Automaton).
+  remove_dead_transitions_from_states(ReachableStates, LiveStates).
+  %reduce(Automaton).
 
 remove_dead_transitions_from_states([], _).
 remove_dead_transitions_from_states([State|T], LiveStates) :- 
@@ -378,6 +386,6 @@ expand_singleton_from_codes([Code|T], Predecessor) :-
   atom_codes(Char,[Code]) , 
   new_state(InnerState) , 
   add_transition(Predecessor, [Char,Char]-InnerState) , 
-  expand_singleton_from_codes(T, Predecessor).
+  expand_singleton_from_codes(T, InnerState).
 
 % Skipped public Methods of original Java library: toDot(), toString(), load(), store()
