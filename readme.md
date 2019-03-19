@@ -7,6 +7,9 @@ Port of the [dk.brics.automaton](https://github.com/cs-au-dk/dk.brics.automaton)
 Overview of ported classes
 
 * [X] Automaton
+  * Note: Original Java implementation held a Unicode interval and a destination which could be 
+    reduced by combining overlapping intervals of adjacent states. Since we unfold ranges (see ~~*Transition*~~), 
+    Automaton#reduce() is not ported.
 * [ ] AutomatonMatcher
 * [X] ~~*AutomatonProvider*~~ [2019-03-14]
   * Note: In the original Java library, this is an interface.
