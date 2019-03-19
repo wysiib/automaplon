@@ -1,4 +1,6 @@
 :- module(automaton, [new_automaton/1,
+                      is_singleton/1,
+                      expand_singleton/1,
                       remove_dead_transitions/1,
                       clone/2,
                       get_initial/2, 
@@ -111,12 +113,14 @@ get_info(Automaton, Info) :-
 %
 % Get all states by exploring the initial state exhaustively.
 get_states(Automaton, ReachableStates) :- 
+  expand_singleton(Automaton) , 
   get_reachable_and_accept_states(Automaton, ReachableStates, _).
 
 %% get_accept_states(+Automaton, -States).
 %
 % Get all accepting states by exploring the initial state exhaustively.
 get_accept_states(Automaton, ReachableAcceptStates) :- 
+  expand_singleton(Automaton) , 
   get_reachable_and_accept_states(Automaton, _, ReachableAcceptStates).
 
 get_reachable_and_accept_states(Automaton, [Initial|ReachableStates], AcceptStates) :- 
@@ -349,9 +353,35 @@ map_get_number_of_transitions([_-Destinations|T], AccNr, NrOfTransitions) :-
   NewAccNr is AccNr + Len , 
   map_get_number_of_transitions(T, NewAccNr, NrOfTransitions).
 
-% TODO:
 
-expand_singleton(Automaton) :- Automaton = Automaton.
+%% expand_singleton(+Automaton).
+%
+% Expand singleton representation to normal representation. 
+% Does nothing if not in singleton representation.
+expand_singleton(Automaton) :- 
+  get_singleton(Automaton, Singleton) , 
+  Singleton \== null , 
+  ! , 
+  new_state(Initial) , 
+  set_initial(Automaton, Initial) , 
+  atom_codes(Singleton, SingletonCodes) , 
+  expand_singleton_from_codes(SingletonCodes, Initial) , 
+  set_deterministic(Automaton, true) , 
+  set_singleton(Automaton, null).
+expand_singleton(_).
+
+expand_singleton_from_codes([Code], Predecessor) :- ! , 
+  atom_codes(Char,[Code]) , 
+  new_state(Final) , 
+  set_accept(Final, true) , 
+  add_transition(Predecessor, [Char,Char]-Final).
+expand_singleton_from_codes([Code|T], Predecessor) :- 
+  atom_codes(Char,[Code]) , 
+  new_state(InnerState) , 
+  add_transition(Predecessor, [Char,Char]-InnerState) , 
+  expand_singleton_from_codes(T, Predecessor).
+
+% TODO:
 
 shuffle(Automaton) :- Automaton = Automaton.
 
