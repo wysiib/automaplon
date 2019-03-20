@@ -7,7 +7,6 @@
 %% run(+Automaton, +Atom).
 %
 % True if the given atom (or SWI-Prolog String) is accepted by the automaton.
-% Complexity: linear in the length of the atom.
 run(Automaton, Atom) :-
     is_singleton(Automaton),
     !,
@@ -18,51 +17,43 @@ run(Automaton, Atom) :-
     !,
     atom_chars(Atom, ListOfAtoms),
     get_initial(Automaton, Initial),
-    run_atom_codes(Initial, ListOfAtoms).
+    run_atom_codes(Initial, ListOfAtoms),!.
 run(Automaton, Atom) :-
-    get_states(Automaton, States),
-    enumerate_states_coherently(1, States) ,
-    length(States, NrOfStates) ,
     get_initial(Automaton, Initial),
-    PP = [Initial],
-    new_bitset(NrOfStates, BB),
-    new_bitset(NrOfStates, BB_other),
+    States = [Initial],
     get_accept(Initial, InitialAccept),
     atom_chars(Atom, ListOfAtoms),
-    run_non_det(ListOfAtoms, PP, BB, BB_other, InitialAccept),!.
+    retractall(seen(_)),
+    run_non_det(ListOfAtoms, States, InitialAccept),!.
 
-enumerate_states_coherently(_, []).
-enumerate_states_coherently(C, [State|T]) :-
-    set_number(State, C) ,
-    C1 is C + 1 ,
-    enumerate_states_coherently(C1, T).
+:- dynamic seen/1.
+:- volatile seen/1.
 
-run_non_det([], _, _, _, Accept) :-
+run_non_det([], _, Accept) :-
     Accept == true,
     !.
-run_non_det([CharAtom|T], PP, BB, BB_other, _) :-
-    copy_term(BB, BBOld) ,
-    run_non_det_for_char(CharAtom, PP, BB, D-D, BB_other, NewPP-D2, false, Accept),
+run_non_det([CharAtom|T], States, _) :-
+    run_non_det_for_char(CharAtom, States, D-D, NewStates-D2, false, Accept),
     D2 = [],
-    run_non_det(T, NewPP, BB_other, BBOld, Accept).
+    run_non_det(T, NewStates, Accept).
 
-run_non_det_for_char(_, [], _, PP_other-D, _, PP_other-D, Accept, Accept).
-run_non_det_for_char(CharAtom, [PP|T], BB, PP_other-D, BB_other, NewPP_other, CurrentAccept, Accept) :-
-    step(PP, CharAtom, Destinations),
-    run_non_det_for_char_destinations(Destinations, BB, PP_other-D, BB_other, TempNewPP_other, CurrentAccept, NewCurrentAccept),
-    run_non_det_for_char(CharAtom, T, BB, TempNewPP_other, BB_other, NewPP_other, NewCurrentAccept, Accept).
+run_non_det_for_char(_, [], TempStates-D, TempStates-D, Accept, Accept).
+run_non_det_for_char(CharAtom, [States|T], TempStates-D, NewTempStates, CurrentAccept, Accept) :-
+    step(States, CharAtom, Destinations),
+    run_non_det_for_char_destinations(Destinations, TempStates-D, TempTempStates, CurrentAccept, NewCurrentAccept),
+    run_non_det_for_char(CharAtom, T, TempTempStates, NewTempStates, NewCurrentAccept, Accept).
 
-run_non_det_for_char_destinations([], _, PP_other-D, _, PP_other-D, Accept, Accept).
-run_non_det_for_char_destinations([Destination|T], BB, PP_other-D, BB_other, NewPP_other, CurrentAccept, Accept) :-
+run_non_det_for_char_destinations([], TempStates-D, TempStates-D, Accept, Accept).
+run_non_det_for_char_destinations([Destination|T], TempStates-D, NewTempStates, CurrentAccept, Accept) :-
     (is_accept(Destination)
     -> NCurrentAccept = true
     ;  NCurrentAccept = CurrentAccept),
-    get_number(Destination, DestinationNumber),
-    (\+ bit_is_set(BB_other, DestinationNumber)
-    -> set_bit(BB_other, DestinationNumber),
-       D = [Destination|ND]
-    ;  D = ND),
-    run_non_det_for_char_destinations(T, BB, PP_other-ND, BB_other, NewPP_other, NCurrentAccept, Accept).
+    get_id(Destination, DestinationId),
+    (seen(DestinationId)
+    -> D = ND
+    ;  assert(seen(DestinationId)),
+       D = [Destination|ND]),
+    run_non_det_for_char_destinations(T, TempStates-ND, NewTempStates, NCurrentAccept, Accept).
 
 run_atom_codes(State, []) :-
     is_accept(State).
