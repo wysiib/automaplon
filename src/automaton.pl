@@ -138,10 +138,11 @@ get_reachable_and_accept_states(Automaton, [Initial|ReachableStates], AcceptStat
   retractall(seen(_)),
   add_state_to_list_if_accepting(Initial, TempAcceptStates, AcceptStates).
 
-get_reachable_and_accept_states(_, StateId, ReachableAcc, ReachableAcc, AcceptAcc, NewAcc) :-
+get_reachable_and_accept_states(_, StateId, ReachableAcc, NewReachableAcc, AcceptAcc, NewAcceptAcc) :-
   seen(StateId),
   !,
-  NewAcc = AcceptAcc.
+  NewAcceptAcc = AcceptAcc,
+  NewReachableAcc = ReachableAcc.
 get_reachable_and_accept_states(State, StateId, Acc, ReachableStates, AcceptAcc, AcceptStates) :-
   assert(seen(StateId)),
   get_next_states(State, NextStates),
