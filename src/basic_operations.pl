@@ -1,5 +1,7 @@
 :- module(basic_operations, [run/2]).
 
+:- use_module(state).
+:- use_module(automaton).
 :- use_module(util/bitset).
 
 %% run(+Automaton, +Atom).
@@ -27,7 +29,7 @@ run(Automaton, Atom) :-
     new_bitset(NrOfStates, BB_other),
     get_accept(Initial, InitialAccept),
     atom_chars(Atom, ListOfAtoms),
-    run_non_det(ListOfAtoms, PP, BB, BB_other, InitialAccept).
+    run_non_det(ListOfAtoms, PP, BB, BB_other, InitialAccept),!.
 
 enumerate_states_coherently(_, []).
 enumerate_states_coherently(C, [State|T]) :-
@@ -35,22 +37,23 @@ enumerate_states_coherently(C, [State|T]) :-
     C1 is C + 1 ,
     enumerate_states_coherently(C1, T).
 
-run_non_det([], _, _, _, _, Accept) :-
+run_non_det([], _, _, _, Accept) :-
     Accept == true,
     !.
 run_non_det([CharAtom|T], PP, BB, BB_other, _) :-
     copy_term(BB, BBOld) ,
-    run_non_det_for_char(CharAtom, PP, BB, D-D, BB_other, NewPP, false, Accept),
-    run_non_det(T, NewPP, PP, BB_other, BBOld, Accept).
+    run_non_det_for_char(CharAtom, PP, BB, D-D, BB_other, NewPP-D2, false, Accept),
+    D2 = [],
+    run_non_det(T, NewPP, BB_other, BBOld, Accept).
 
 run_non_det_for_char(_, [], _, PP_other-D, _, PP_other-D, Accept, Accept).
-run_non_det_for_char(CharAtom, [PP|T], BB, PP_other, BB_other, NewPP_other, CurrentAccept, Accept) :-
+run_non_det_for_char(CharAtom, [PP|T], BB, PP_other-D, BB_other, NewPP_other, CurrentAccept, Accept) :-
     step(PP, CharAtom, Destinations),
-    run_non_det_for_char_and_destinations(Destinations, BB, PP_other, BB_other, TempNewPP_other, CurrentAccept, NewCurrentAccept),
+    run_non_det_for_char_destinations(Destinations, BB, PP_other-D, BB_other, TempNewPP_other, CurrentAccept, NewCurrentAccept),
     run_non_det_for_char(CharAtom, T, BB, TempNewPP_other, BB_other, NewPP_other, NewCurrentAccept, Accept).
 
-run_non_det_for_char_and_destinations([], _, PP_other-D, _, PP_other-D, Accept, Accept).
-run_non_det_for_char_and_destinations([Destination|T], BB, PP_other-D, BB_other, NewPP_other, CurrentAccept, Accept) :-
+run_non_det_for_char_destinations([], _, PP_other-D, _, PP_other-D, Accept, Accept).
+run_non_det_for_char_destinations([Destination|T], BB, PP_other-D, BB_other, NewPP_other, CurrentAccept, Accept) :-
     (is_accept(Destination)
     -> NCurrentAccept = true
     ;  NCurrentAccept = CurrentAccept),
@@ -59,7 +62,7 @@ run_non_det_for_char_and_destinations([Destination|T], BB, PP_other-D, BB_other,
     -> set_bit(BB_other, DestinationNumber),
        D = [Destination|ND]
     ;  D = ND),
-    run_non_det_for_char_and_destinations(T, BB, PP_other-ND, BB_other, NewPP_other, NCurrentAccept, Accept).
+    run_non_det_for_char_destinations(T, BB, PP_other-ND, BB_other, NewPP_other, NCurrentAccept, Accept).
 
 run_atom_codes(State, []) :-
     is_accept(State).
