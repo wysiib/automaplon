@@ -1,7 +1,7 @@
 :- module(basic_operations, [run/2]).
 
-:- use_module(state).
 :- use_module(automaton).
+:- use_module(state).
 :- use_module(util/bitset).
 
 %% run(+Automaton, +Atom).
