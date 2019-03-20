@@ -222,7 +222,12 @@ test(generate_literals) :-
     state:literals_list(j, j, Lits5),
     Lits5 == [j],
     state:literals_list(z, z, Lits6),
-    Lits6 == [z].
+    Lits6 == [z],
+    state:literals_list(' ', '!', Lits7),
+    Lits7 == [' ', '!'],
+    state:literals_list(' ', z, Lits8),
+    length(Lits8, LLits8),
+    LLits8 == 91.
 
 test(generate_literals_wrong_input1,[fail]) :-
     state:literals_list(d, a, _).
