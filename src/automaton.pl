@@ -26,7 +26,7 @@
 % Variable Attributes:
 %   initial - an initial State
 %   deterministic - is true if the automaton is deterministic
-%   singleton - a singleton string or null
+%   singleton - a singleton string (may be unset)
 %   minimise_always - always minimise automaton if true
 %   info - associates extra information with this automaton as a list
 
@@ -72,22 +72,26 @@ set_deterministic(Automaton, Deterministic) :-
 
 %% get_singleton(+Automaton, -Singleton).
 %
-% Returns an atom (singleton string) if the automaton is singleton, otherwise the call fails.
+% Returns an atom (singleton string) if the automaton is singleton,
+% fails silently otherwise.
 get_singleton(Automaton, Singleton) :-
     get_attr(Automaton, singleton, Singleton).
 
 %% is_singleton(+Automaton).
 %
-% True if the automaton is singleton, i.e., the attribute singleton is not null.
+% True if the automaton is singleton.
 is_singleton(Automaton) :-
-    get_attr(Automaton, singleton, Singleton),
-    Singleton \== null.
+    get_attr(Automaton, singleton, _).
 
 %% set_singleton(+Automaton, +Singleton).
 %
 % Set the automaton's singleton attribute.
 set_singleton(Automaton, Singleton) :-
     put_attr(Automaton, singleton, Singleton).
+
+unset_singleton(Automaton) :-
+    del_attr(Automaton, singleton), !.
+unset_singleton(_).
 
 %% set_minimise_always(+Automaton, +MinimiseAlways).
 %
@@ -345,9 +349,8 @@ add_live_transitions_to_state(State, Lit, [_|T], LiveStates) :-
 % get_number_of_transitions/2 returns a different value than the
 % original Java library.
 get_number_of_transitions(Automaton, NrOfTransitions) :-
-  get_singleton(Automaton, Singleton),
-  Singleton \== null,
-  !,
+  get_singleton(Automaton, Singleton) ,
+  ! ,
   atom_length(Singleton, NrOfTransitions).
 get_number_of_transitions(Automaton, NrOfTransitions) :-
   get_states(Automaton, States),
@@ -373,14 +376,13 @@ map_get_number_of_transitions([_-Destinations|T], AccNr, NrOfTransitions) :-
 % Does nothing if not in singleton representation.
 expand_singleton(Automaton) :-
   get_singleton(Automaton, Singleton),
-  Singleton \== null,
   !,
   new_state(Initial),
   set_initial(Automaton, Initial),
   atom_chars(Singleton, ListOfAtoms),
   expand_singleton_from_codes(ListOfAtoms, Initial),
   set_deterministic(Automaton, true),
-  set_singleton(Automaton, null).
+  unset_singleton(Automaton).
 expand_singleton(_).
 
 expand_singleton_from_codes([CharAtom], Predecessor) :- !,

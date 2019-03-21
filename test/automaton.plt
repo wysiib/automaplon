@@ -452,6 +452,13 @@ test(expand_singleton_automaton1) :-
     get_number_of_states(A, NrOfStates),
     NrOfStates == 5.
 
+test(unsetting_singleton) :-
+    new_automaton(A),
+    set_singleton(A, 'single'),
+    is_singleton(A),
+    automaton:unset_singleton(A),
+    \+ is_singleton(A).
+
 test(expand_singleton_automaton2) :-
     new_automaton(A),
     set_singleton(A, 'a larger singleton test'),
