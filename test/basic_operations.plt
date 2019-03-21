@@ -129,4 +129,41 @@ test(run_for_non_deterministic_automaton3) :-
     \+ is_deterministic(A),
     run(A,'5098743763595415826950987437635954158269509874376359541582695098743763595415826950987437635954158269509874376359541582695098743763595415826950987437635954158269509874376359541582695098743763595415826950987437635954158269509874376359541582695098743763595415826950987437635954158269').
 
+test(accept_multiple_words) :-
+    new_automaton(A),
+    get_initial(A, S0),
+    new_state(S1),
+    new_state(S2),
+    new_state(S3),
+    add_transition(S0, a, S1),
+    add_transition(S0, a, S2),
+    add_transition(S0, b, S2),
+    add_transition(S1, a, S3),
+    add_transition(S2, b, S3),
+    set_accept(S2, true),
+    set_accept(S3, true),
+    assertion(run(A, a)),
+    assertion(run(A, b)),
+    assertion(run(A, aa)),
+    assertion(run(A, ab)),
+    assertion(run(A, bb)).
+
+test(enumerate_words, [fixme("Should enumeration be possible?")]) :-
+    new_automaton(A),
+    get_initial(A, S0),
+    new_state(S1),
+    new_state(S2),
+    new_state(S3),
+    add_transition(S0, a, S1),
+    add_transition(S0, a, S2),
+    add_transition(S0, b, S2),
+    add_transition(S1, a, S3),
+    add_transition(S2, b, S3),
+    set_accept(S2, true),
+    set_accept(S3, true),
+    findall(X, run(A, X), Words),
+    assert(length(Words, 5)).
+
+
+
 :- end_tests(basic_operations_run).
