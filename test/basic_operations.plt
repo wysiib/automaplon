@@ -162,7 +162,7 @@ test(enumerate_words, [fixme("Should enumeration be possible?")]) :-
     set_accept(S2, true),
     set_accept(S3, true),
     findall(X, run(A, X), Words),
-    assert(length(Words, 5)).
+    assertion(length(Words, 5)).
 
 
 
