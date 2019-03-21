@@ -1,4 +1,5 @@
 :- module(automaton, [new_automaton/1,
+                      new_automaton/2,
                       is_singleton/1,
                       is_deterministic/1,
                       expand_singleton/1,
@@ -38,6 +39,14 @@ new_automaton(Automaton) :-
     set_initial(Automaton, State),
     set_minimise_always(Automaton, true),
     set_deterministic(Automaton, true).
+
+%% new_automaton(-Automaton, +String).
+%
+% Initialises a new singleton automaton which accepts exactly the specified
+% string.
+new_automaton(Automaton, String) :-
+    new_automaton(Automaton),
+    set_singleton(Automaton, String).
 
 %% get_initial(+Automaton, -Initial).
 %
@@ -87,6 +96,9 @@ is_singleton(Automaton) :-
 %
 % Set the automaton's singleton attribute.
 set_singleton(Automaton, Singleton) :-
+    % Clean out states
+    new_state(NewInitial),
+    set_initial(Automaton, NewInitial),
     put_attr(Automaton, singleton, Singleton).
 
 unset_singleton(Automaton) :-

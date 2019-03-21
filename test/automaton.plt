@@ -395,6 +395,42 @@ test(clone_singleton) :-
     get_minimise_always(C, MinC2),
     MinA2 == true, MinB2 == false, MinC2 == false.
 
+test(clone_expanded_singleton) :-
+    new_automaton(A, singleton),
+    expand_singleton(A),
+    clone(A, B),
+    clone(A, C),
+    get_initial(A, InitialA),
+    get_initial(B, InitialB),
+    get_initial(C, InitialC),
+    \+ equals(InitialA, InitialB),
+    \+ equals(InitialA, InitialC),
+    \+ equals(InitialB, InitialC),
+    get_deterministic(A, DetA),
+    get_deterministic(B, DetB),
+    get_deterministic(C, DetC),
+    DetA == DetB, DetA == DetC, DetB == DetC,
+    get_minimise_always(A, MinA),
+    get_minimise_always(B, MinB),
+    get_minimise_always(C, MinC),
+    MinA == MinB, MinA == MinC, MinB == MinC,
+    \+ get_singleton(A, _),
+    \+ get_singleton(B, _),
+    \+ get_singleton(C, _),
+    \+ is_singleton(A),
+    \+ is_singleton(B),
+    \+ is_singleton(C),
+    set_deterministic(A, false),
+    get_deterministic(A, DetA2),
+    get_deterministic(B, DetB2),
+    get_deterministic(C, DetC2),
+    DetA2 == false, DetB2 == true, DetC2 == true,
+    set_minimise_always(B, false),
+    set_minimise_always(C, false),
+    get_minimise_always(A, MinA2),
+    get_minimise_always(B, MinB2),
+    get_minimise_always(C, MinC2),
+    MinA2 == true, MinB2 == false, MinC2 == false.
 
 % TODO: more tests
 
@@ -491,6 +527,23 @@ test(remove_dead_transitions4) :-
 :- end_tests(remove_dead_transitions).
 
 :- begin_tests(singleton_automaton).
+
+test(setting_singleton_clears_states) :-
+    new_automaton(A),
+    get_initial(A, I1),
+    set_singleton(A, singleton),
+    get_initial(A, I2),
+    assertion(\+ equals(I1, I2)).
+
+test(setting_singleton_backtracks) :-
+    new_automaton(A),
+    get_initial(A, I1),
+    ( set_singleton(A, singleton),
+      fail
+    ; true),
+    get_initial(A, I2),
+    assertion(equals(I1, I2)).
+
 
 test(singleton_automaton_get_states_expands_singleton) :-
     new_automaton(A),
