@@ -80,6 +80,18 @@ get_number(State, Number) :-
 set_number(State, Number) :-
     put_attr(State, number, Number).
 
+%% add_epsilon(State, Destination).
+%
+% Add an epsilon transition from State to Destination.
+% Note: The original Java library does not introduce real epsilon transitions.
+% Consequently, the transitions of an automaton that has introduced an "epsilon"
+% transition depend on the time when a transition was added. For instance,
+% add an epsilon transition from S1 to S2 and add a transition from S2 to S3
+% afterwards. Then, one cannot transition from S1 to S3 in the original Java implementation.
+% When introducing a real epsilon transition this is possible.
+add_epsilon(State, Destination) :-
+  add_transition(State, '', Destination).
+
 %% get_next_states(+State, -NextStates).
 %
 % True if NextStates is the set of states reachable in one step.
