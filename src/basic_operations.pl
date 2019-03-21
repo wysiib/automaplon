@@ -14,10 +14,12 @@ run(Automaton, Atom) :-
 run(Automaton, Atom) :-
     is_deterministic(Automaton),
     !,
+    atom(Atom),
     atom_chars(Atom, ListOfAtoms),
     get_initial(Automaton, Initial),
     run_atom_codes(Initial, ListOfAtoms),!.
 run(Automaton, Atom) :-
+    atom(Atom),
     get_initial(Automaton, Initial),
     States = [Initial],
     get_accept(Initial, InitialAccept),

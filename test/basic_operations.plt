@@ -148,22 +148,8 @@ test(accept_multiple_words) :-
     assertion(run(A, ab)),
     assertion(run(A, bb)).
 
-test(enumerate_words, [fixme("Should enumeration be possible?")]) :-
+test(run_fails_on_nonatom, [fail]) :-
     new_automaton(A),
-    get_initial(A, S0),
-    new_state(S1),
-    new_state(S2),
-    new_state(S3),
-    add_transition(S0, a, S1),
-    add_transition(S0, a, S2),
-    add_transition(S0, b, S2),
-    add_transition(S1, a, S3),
-    add_transition(S2, b, S3),
-    set_accept(S2, true),
-    set_accept(S3, true),
-    findall(X, run(A, X), Words),
-    assertion(length(Words, 5)).
-
-
+    run(A, _).
 
 :- end_tests(basic_operations_run).
