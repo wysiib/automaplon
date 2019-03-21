@@ -3,7 +3,8 @@
 :- use_module(test_util).
 :- use_module('../src/automaton.pl').
 :- use_module('../src/state.pl').
-:- use_module('../src/util/maps', [map_is_empty/1]).
+:- use_module('../src/util/maps', [map_is_empty/1,
+                                   map_pairs/2]).
 
 :- begin_tests(automaton_basic).
 
@@ -317,7 +318,7 @@ test(clone1) :-
     get_minimise_always(C, MinC2),
     MinA2 == true, MinB2 == false, MinC2 == false.
 
-test(clone2) :-
+test(clone_dfa) :-
     new_automaton(A),
     set_deterministic(A, false),
     get_initial(A, Initial),
@@ -356,7 +357,59 @@ test(clone2) :-
     get_states(C, StatesC2),
     \+ equal_lists_as_set(StatesC, StatesC2).
 
+test(clone_singleton) :-
+    new_automaton(A),
+    set_singleton(A, single),
+    clone(A, B),
+    clone(A, C),
+    get_initial(A, InitialA),
+    get_initial(B, InitialB),
+    get_initial(C, InitialC),
+    \+ equals(InitialA, InitialB),
+    \+ equals(InitialA, InitialC),
+    \+ equals(InitialB, InitialC),
+    get_deterministic(A, DetA),
+    get_deterministic(B, DetB),
+    get_deterministic(C, DetC),
+    DetA == DetB, DetA == DetC, DetB == DetC,
+    get_minimise_always(A, MinA),
+    get_minimise_always(B, MinB),
+    get_minimise_always(C, MinC),
+    MinA == MinB, MinA == MinC, MinB == MinC,
+    get_singleton(A, SingleA),
+    get_singleton(B, SingleB),
+    get_singleton(C, SingleC),
+    SingleA == SingleB, SingleB == SingleC, SingleB == SingleC,
+    is_singleton(A),
+    is_singleton(B),
+    is_singleton(C),
+    set_deterministic(A, false),
+    get_deterministic(A, DetA2),
+    get_deterministic(B, DetB2),
+    get_deterministic(C, DetC2),
+    DetA2 == false, DetB2 == true, DetC2 == true,
+    set_minimise_always(B, false),
+    set_minimise_always(C, false),
+    get_minimise_always(A, MinA2),
+    get_minimise_always(B, MinB2),
+    get_minimise_always(C, MinC2),
+    MinA2 == true, MinB2 == false, MinC2 == false.
+
+
 % TODO: more tests
+
+test(map_of_fresh_states) :-
+    new_state(S1),
+    new_state(S2),
+    get_id(S1, Id1),
+    get_id(S2, Id2),
+    automaton:map_states_to_fresh_states([S1, S2], StateMap),
+    map_pairs(StateMap, Pairs),
+    assertion(length(Pairs, 2)),
+    member(Id1-F1, Pairs),
+    member(Id2-F2, Pairs),
+    assertion(state:is_state(F1)),
+    assertion(state:is_state(F2)).
 
 :- end_tests(automaton_clone).
 

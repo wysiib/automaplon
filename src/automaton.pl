@@ -235,11 +235,15 @@ init_backward_path_map_for_state_and_next_states(ReachableState, [NextState|T], 
 %
 % Returns a cloned automaton (deep copy).
 clone(Automaton, ClonedAutomaton) :-
+  get_singleton(Automaton, Singleton),
+  !,
+  new_automaton(ClonedAutomaton),
+  set_singleton(ClonedAutomaton, Singleton).
+clone(Automaton, ClonedAutomaton) :-
   get_initial(Automaton, Initial),
   get_minimise_always(Automaton, MinimiseAlways),
   get_deterministic(Automaton, Deterministic),
   get_states(Automaton, States),
-  clone_singleton_attribute(Automaton, ClonedAutomaton),
   new_automaton(ClonedAutomaton),
   set_minimise_always(ClonedAutomaton, MinimiseAlways),
   set_deterministic(ClonedAutomaton, Deterministic),
@@ -248,13 +252,6 @@ clone(Automaton, ClonedAutomaton) :-
   get_id(Initial, InitialId),
   map_get(StatesMap, InitialId, ClonedInitial),
   set_initial(ClonedAutomaton, ClonedInitial).
-
-clone_singleton_attribute(Automaton, ClonedAutomaton) :-
-  get_singleton(Automaton, Singleton) ,
-  set_singleton(ClonedAutomaton, Singleton) ,
-  !.
-% if an automaton is not singleton, this attribute is just a variable and get_attr/3 fails
-clone_singleton_attribute(_, _).
 
 %% clone_transitions_to_fresh_states(+States, +StatesMap).
 %
