@@ -17,6 +17,13 @@ test(construction,[setup(cleanup_state)]) :-
     equals(S1,S1),
     equals(S2,S2).
 
+test(is_state) :-
+    new_state(S),
+    assertion(is_state(S)).
+
+test(arbitrary_variables_are_not_states) :-
+    assertion(\+ is_state(_)).
+
 test(equality,[setup(cleanup_state)]) :-
     new_state(S1),
     equals(S1, S1).

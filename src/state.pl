@@ -1,4 +1,5 @@
 :- module(state, [new_state/1,
+                  is_state/1,
                   is_accept/1,
                   reset_transitions/1,
                   add_transition/2,
@@ -50,6 +51,16 @@ new_state(State) :-
     empty_map(Transitions),
     put_attr(State, transitions, Transitions),
     put_attr(State, next_states, []).
+
+%% is_state(+State).
+%
+% Succeeds if properly defined state.
+is_state(State) :-
+    attvar(State),
+    get_attr(State, id, _),
+    get_attr(State, accept, _),
+    get_attr(State, transitions, _),
+    get_attr(State, next_states, _).
 
 %% get_id(+State, -Id).
 %
