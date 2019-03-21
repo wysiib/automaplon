@@ -2,6 +2,7 @@
                   is_state/1,
                   is_accept/1,
                   reset_transitions/1,
+                  add_epsilon/2,
                   add_transition/2,
                   add_transition/3,
                   add_transition/4,
@@ -165,7 +166,11 @@ add_transition_internal(State, Lit, Destination) :-
 % Add transitions from +State to +Dest for each char between +Min and +Max.
 add_transition_range(State, Min, Max, Dest) :-
     literals_list(Min, Max, Lits),
+    !,
     add_transition_range(Lits, State, Dest).
+% Special case for the empty word.
+add_transition_range(State, '', '', Dest) :-
+    add_transition_range([''], State, Dest).
 
 %% add_transition_range(+Literals, +State, +Destination).
 %
