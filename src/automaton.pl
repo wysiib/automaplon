@@ -265,7 +265,7 @@ clone_transitions_to_fresh_states([State|T], StatesMap) :-
   get_id(State, StateId),
   map_get(StatesMap, StateId, ClonedState),
   get_transitions(State, Transitions), % Note: bottleneck for performance since we expanded the char ranges in states.pl
-  dict_pairs(Transitions, transitions, KeyValueList),
+  map_pairs(Transitions, KeyValueList),
   clone_transitions_to_fresh_state(ClonedState, KeyValueList, StatesMap),
   clone_transitions_to_fresh_states(T, StatesMap).
 
@@ -322,7 +322,7 @@ remove_dead_transitions(Automaton) :-
 remove_dead_transitions_from_states([], _).
 remove_dead_transitions_from_states([State|T], LiveStates) :-
   get_transitions(State, Transitions),
-  dict_pairs(Transitions, transitions, KeyValueList),
+  map_pairs(Transitions, KeyValueList),
   reset_transitions(State),
   add_live_transitions_to_state(State, KeyValueList, LiveStates),
   remove_dead_transitions_from_states(T, LiveStates).
@@ -359,7 +359,7 @@ get_number_of_transitions(Automaton, NrOfTransitions) :-
 get_number_of_transitions([], Acc, Acc).
 get_number_of_transitions([State|T], C, NrOfTransitions) :-
   get_transitions(State, Transitions),
-  dict_pairs(Transitions, transitions, KeyValueList),
+  map_pairs(Transitions, KeyValueList),
   map_get_number_of_transitions(KeyValueList, 0, AccNr),
   C1 is C + AccNr,
   get_number_of_transitions(T, C1, NrOfTransitions).

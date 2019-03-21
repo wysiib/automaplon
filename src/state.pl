@@ -45,7 +45,8 @@ new_state(State) :-
     get_next_id(NextId),
     put_attr(State, id, NextId),
     put_attr(State, accept, false),
-    put_attr(State, transitions, transitions{}),
+    empty_map(Transitions),
+    put_attr(State, transitions, Transitions),
     put_attr(State, next_states, []).
 
 %% get_id(+State, -Id).
@@ -165,7 +166,8 @@ asciis_to_atom_codes([Ascii|T], Acc-D, Literals) :-
 %
 % Remove all transitions attached to State.
 reset_transitions(State) :-
-    put_attr(State, transitions, transitions{}),
+    empty_map(EmptyMap),
+    put_attr(State, transitions, EmptyMap),
     put_attr(State, next_states, []).
 
 %% set_accept(+State, +Accept).

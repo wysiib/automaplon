@@ -3,6 +3,7 @@
 :- use_module(test_util).
 :- use_module('../src/automaton.pl').
 :- use_module('../src/state.pl').
+:- use_module('../src/util/maps', [map_is_empty/1]).
 
 :- begin_tests(automaton_basic).
 
@@ -11,7 +12,7 @@ test(construction) :-
     get_initial(Automaton, Initial),
     get_deterministic(Automaton, Deterministic),
     get_transitions(Initial, InitialTransitions),
-    InitialTransitions == transitions{},
+    map_is_empty(InitialTransitions),
     get_transitions(Initial, a, TransitionsA),
     TransitionsA == [],
     get_transitions(Initial, j, TransitionsJ),
