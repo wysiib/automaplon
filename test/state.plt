@@ -130,11 +130,11 @@ test(add_get_transition4,[setup(cleanup_state)]) :-
     new_state(S4),
     add_transition(S1, [m, q]-S2),
     add_transition(S1, [a, z]-S3),
-    get_transitions(S1, b,TransitionsB),
+    get_transitions(S1, b, TransitionsB),
     equal_lists_as_set(TransitionsB,[S3]),
-    get_transitions(S1, m,TransitionsM),
+    get_transitions(S1, m, TransitionsM),
     equal_lists_as_set(TransitionsM,[S2,S3]),
-    get_transitions(S1, p,TransitionsP),
+    get_transitions(S1, p, TransitionsP),
     equal_lists_as_set(TransitionsP,[S2,S3]),
     add_transition(S2, [a, d]-S3),
     add_transition(S2, [a, z]-S4),
@@ -153,22 +153,22 @@ test(add_get_transition_backtrackable,[setup(cleanup_state)]) :-
     new_state(S1),
     new_state(S2),
     ( add_transition(S1, [a,d]-S2),
-      get_transitions(S1, a,TransitionsA),
+      get_transitions(S1, a, TransitionsA),
       TransitionsA == [S2],
-      get_transitions(S1, b,TransitionsB),
+      get_transitions(S1, b, TransitionsB),
       TransitionsB == [S2],
-      get_transitions(S1, c,TransitionsC),
+      get_transitions(S1, c, TransitionsC),
       TransitionsC == [S2],
-      get_transitions(S1, d,TransitionsD),
+      get_transitions(S1, d, TransitionsD),
       TransitionsD == [S2],
       fail
-    ; get_transitions(S1, a,TransitionsA),
+    ; get_transitions(S1, a, TransitionsA),
       TransitionsA == [],
-      get_transitions(S1, b,TransitionsB),
+      get_transitions(S1, b, TransitionsB),
       TransitionsB == [],
-      get_transitions(S1, c,TransitionsC),
+      get_transitions(S1, c, TransitionsC),
       TransitionsC == [],
-      get_transitions(S1, d,TransitionsD),
+      get_transitions(S1, d, TransitionsD),
       TransitionsD == []).
 
 test(add_get_transition_backtrackable2,[setup(cleanup_state)]) :-
@@ -189,6 +189,30 @@ test(add_get_transition_backtrackable2,[setup(cleanup_state)]) :-
       TransitionsA == [],
       get_transitions(S1, b, TransitionsB),
       TransitionsB == []).
+
+test(add_epsilon1,[setup(cleanup_state)]) :-
+    new_state(S1),
+    new_state(S2),
+    new_state(S3),
+    add_transition(S1, [m, q]-S2),
+    add_epsilon(S2, S3),
+    get_transitions(S1, b, TransitionsB),
+    equal_lists_as_set(TransitionsB, []),
+    get_transitions(S1, m, TransitionsM),
+    equal_lists_as_set(TransitionsM, [S2]),
+    get_transitions(S1, '', TransitionsS1Eps),
+    equal_lists_as_set(TransitionsS1Eps, []),
+    get_transitions(S2, '', TransitionsS2Eps),
+    equal_lists_as_set(TransitionsS2Eps, [S3]).
+
+test(add_epsilon2,[setup(cleanup_state)]) :-
+    new_state(S1),
+    new_state(S2),
+    new_state(S3),
+    add_epsilon(S1, S2),
+    add_epsilon(S1, S3),
+    get_transitions(S1, '', TransitionsS1Eps),
+    equal_lists_as_set(TransitionsS1Eps, [S2, S3]).
 
 test(next_states1,[setup(cleanup_state)]) :-
     new_state(S1),
