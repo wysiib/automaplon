@@ -2,6 +2,8 @@
                   is_accept/1,
                   reset_transitions/1,
                   add_transition/2,
+                  add_transition/3,
+                  add_transition/4,
                   set_accept/2,
                   equals/2,
                   set_number/2,
@@ -105,17 +107,30 @@ step(_, _, []).
 %
 % For instance, =|add_transition(S1, [a,d]-S2)|= allows to transition from
 % state S1 to S2 with either literal from a to d.
-add_transition(State, [Min,Max]-Destination) :-
+add_transition(State, [Min, Max]-Destination) :-
     add_transition_range(State, Min, Max, Destination),
     get_attr(State, next_states, OldNextStates),
     ord_add_element(OldNextStates, Destination, NewNextStates),
     put_attr(State, next_states, NewNextStates).
 
-%% add_transition(+State, +Literal, +Destination).
+%% add_transition(+State, +Lit, +Destination).
+%
+% Attaches the a transitions from the State to Destination using the literal Lit.
+add_transition(State, Lit, Destination) :-
+    add_transition(State, [Lit, Lit]-Destination).
+
+%% add_transition(+State, +Min, +Max, +Destination).
+%
+% Attaches the a transitions from the State to Destination using the literals
+% between Min and Max.
+add_transition(State, Min, Max, Destination) :-
+    add_transition(State, [Min, Max]-Destination).
+
+%% add_transition_internal(+State, +Literal, +Destination).
 %
 % Add a single transition to the Destination state from State by using the Literal.
 % Note: only to be used in add_transition/2, attribute next_states is not updated here!
-add_transition(State, Lit, Destination) :-
+add_transition_internal(State, Lit, Destination) :-
     get_transitions(State, Transitions),
     (map_get(Transitions, Lit, Destinations) ; Destinations = []), % TODO: use a set?
     !,
@@ -137,7 +152,7 @@ add_transition_range([], _, _).
 add_transition_range([L|Ls], State, Dest) :-
     % NOTE: we add each literal to the map, the original library uses range abstractions but has to use Automaton#reduce()
     % TODO: evaluate pros and cons
-    add_transition(State, L, Dest),
+    add_transition_internal(State, L, Dest),
     add_transition_range(Ls, State, Dest).
 
 %% literals_list(+Minimum, +Maximum, -Literals).
