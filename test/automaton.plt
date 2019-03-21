@@ -544,6 +544,12 @@ test(setting_singleton_backtracks) :-
     get_initial(A, I2),
     assertion(equals(I1, I2)).
 
+test(unsetting_singleton) :-
+    new_automaton(A),
+    set_singleton(A, 'single'),
+    is_singleton(A),
+    automaton:unset_singleton(A),
+    \+ is_singleton(A).
 
 test(singleton_automaton_get_states_expands_singleton) :-
     new_automaton(A),
@@ -558,13 +564,6 @@ test(expand_singleton_automaton1) :-
     expand_singleton(A),
     get_number_of_states(A, NrOfStates),
     NrOfStates == 5.
-
-test(unsetting_singleton) :-
-    new_automaton(A),
-    set_singleton(A, 'single'),
-    is_singleton(A),
-    automaton:unset_singleton(A),
-    \+ is_singleton(A).
 
 test(expand_singleton_automaton2) :-
     new_automaton(A),
@@ -586,5 +585,12 @@ test(expand_singleton_overwrites_automaton) :-
     expand_singleton(A),
     get_number_of_states(A, NrOfStates),
     NrOfStates == 5.
+
+test(expanding_singleton_backtracks) :-
+    new_automaton(A, singleton),
+    ( expand_singleton(A),
+      fail
+    ; true),
+    assertion(is_singleton(A)).
 
 :- end_tests(singleton_automaton).
