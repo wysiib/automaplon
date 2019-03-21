@@ -2,7 +2,6 @@
 
 :- use_module(automaton).
 :- use_module(state).
-:- use_module(util/bitset).
 
 %% run(+Automaton, +Atom).
 %
