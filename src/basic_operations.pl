@@ -1,7 +1,53 @@
-:- module(basic_operations, [run/2]).
+:- module(basic_operations, [concatenate/3,
+                             run/2]).
 
 :- use_module(automaton).
 :- use_module(state).
+
+%% concatenate(+Automaton1, +Automaton2, -Concat).
+%
+% Returns an automaton that accepts the concatenation of the languages of
+% the given automata.
+concatenate(Automaton1, Automaton2, Concat) :-
+    get_singleton(Automaton1, Singleton1),
+    get_singleton(Automaton2, Singleton2),
+    !,
+    new_automaton(Concat),
+    atom_concat(Singleton1, Singleton2, SingletonC),
+    set_singleton(Concat, SingletonC).
+concatenate(Automaton1, Automaton2, Concat) :-
+    is_empty_automaton(Automaton1),
+    is_empty_automaton(Automaton2),
+    !,
+    new_automaton(Concat).
+concatenate(Automaton1, Automaton2, CAutomaton1) :-
+    (is_singleton(Automaton1),
+     is_deterministic(Automaton2)
+    ->  Deterministic = true
+    ;   Deterministic = false),
+    clone_expanded(Automaton1, CAutomaton1),
+    clone_expanded(Automaton2, CAutomaton2),
+    set_deterministic(CAutomaton1, Deterministic),
+    get_accept_states(CAutomaton1, Accept1),
+    get_initial(CAutomaton2, Initial2),
+    concatenate_add_epsilons(Accept1, CAutomaton1, Initial2).
+    %minimize(CAutomaton1).
+
+concatenate_add_epsilons([], _, _).
+concatenate_add_epsilons([AcceptState|T], CAutomaton1, Initial2) :-
+    set_accept(AcceptState, false),
+    add_epsilon(AcceptState, Initial2),
+    concatenate_add_epsilons(T, CAutomaton1, Initial2).
+
+is_empty_automaton(Automaton) :-
+    get_singleton(Automaton, Singleton),
+    Singleton == '',
+    !.
+is_empty_automaton(Automaton) :-
+    get_initial(Automaton, Initial),
+    is_accept(Initial),
+    get_transitions(Initial, Transitions),
+    Transitions == transitions{}.
 
 %% run(+Automaton, +Atom).
 %
