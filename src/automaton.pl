@@ -5,6 +5,7 @@
                       expand_singleton/1,
                       remove_dead_transitions/1,
                       clone/2,
+                      clone_expanded/2,
                       get_initial/2,
                       set_initial/2,
                       get_singleton/2,
@@ -243,6 +244,13 @@ init_backward_path_map_for_state_and_next_states(ReachableState, [NextState|T], 
   ; map_assoc(BackwardPathMap, NextStateId, [ReachableState], TempBackwardPathMap)),
   init_backward_path_map_for_state_and_next_states(ReachableState, T, TempBackwardPathMap, NewBackwardPathMap).
 
+%% clone_expanded(+Automaton, -ClonedAutomaton).
+%
+% Returns a cloned automaton (deep copy) which is expanded if is singleton.
+clone_expanded(Automaton, ClonedAutomaton) :-
+  clone(Automaton, ClonedAutomaton),
+  expand_singleton(ClonedAutomaton).
+
 %% clone(+Automaton, -ClonedAutomaton).
 %
 % Returns a cloned automaton (deep copy).
@@ -300,7 +308,7 @@ add_transitions_to_fresh_state([_|T], ClonedState, Lit, StatesMap) :-
 
 %% map_states_to_fresh_states(+States, -StatesMap).
 %
-% Create a map pointing ids of the original states to cloned (empty) states.
+% Create a map pointing ids of the original states to cloned states without transitions.
 % We need new State variables before cloning the transitions
 % since they point to attributed state variables.
 map_states_to_fresh_states(States, StatesMap) :-
@@ -311,6 +319,8 @@ map_states_to_fresh_states([], Acc, Acc).
 map_states_to_fresh_states([State|T], Acc, StatesMap) :-
   get_id(State, StateId),
   new_state(ClonedState),
+  get_accept(State, AcceptS),
+  set_accept(ClonedState, AcceptS),
   map_assoc(Acc, StateId, ClonedState, NewAcc),
   map_states_to_fresh_states(T, NewAcc, StatesMap).
 
