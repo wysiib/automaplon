@@ -5,6 +5,40 @@
 :- use_module('../src/state.pl').
 :- use_module('../src/basic_operations.pl').
 
+:- begin_tests(basic_operations_concat).
+
+test(concat1) :-
+    new_automaton(A1),
+    get_initial(A1, Initial1),
+    new_state(S1),
+    new_state(S2),
+    new_state(S3),
+    new_state(S4),
+    set_accept(S4, true),
+    add_transition(Initial1, a, S1),
+    add_transition(S1, b, S2),
+    add_transition(S2, c, S3),
+    add_transition(S3, d, S4),
+    get_number_of_states(A1, NrOfStates1),
+    NrOfStates1 == 5,
+    new_automaton(A2),
+    get_initial(A2, Initial2),
+    new_state(S5),
+    new_state(S6),
+    new_state(S7),
+    new_state(S8),
+    add_transition(Initial2, a, S5),
+    add_transition(S5, b, S6),
+    add_transition(S6, c, S7),
+    add_transition(S7, d, S8),
+    get_number_of_states(A2, NrOfStates2),
+    NrOfStates2 == 5,
+    concatenate(A1, A2, Concat),
+    get_number_of_states(Concat, NrOfStates3),
+    NrOfStates3 == 10.
+
+:- end_tests(basic_operations_concat).
+
 :- begin_tests(basic_operations_run).
 
 test(run_for_singleton_automaton1) :-
