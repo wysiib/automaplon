@@ -330,7 +330,13 @@ test(clone_dfa) :-
     add_transition(S1, [e,f]-S3),
     add_transition(S2, [a,z]-S3),
     add_transition(S2, [a,h]-S4),
+    set_accept(S4, true),
     clone(A, C),
+    get_accept_states(A, AcceptA),
+    get_accept_states(C, AcceptC),
+    length(AcceptA, LA),
+    length(AcceptC, LC),
+    LA == LC,
     % different attributed state variables
     get_initial(A, InitialA),
     get_initial(C, InitialC),
@@ -393,7 +399,15 @@ test(clone_singleton) :-
     get_minimise_always(A, MinA2),
     get_minimise_always(B, MinB2),
     get_minimise_always(C, MinC2),
-    MinA2 == true, MinB2 == false, MinC2 == false.
+    MinA2 == true, MinB2 == false, MinC2 == false,
+    get_accept_states(A, AcceptA),
+    get_accept_states(B, AcceptB),
+    length(AcceptA, LA),
+    length(AcceptB, LB),
+    LA == LB,
+    get_accept_states(C, AcceptC),
+    length(AcceptC, LC),
+    LA == LC.
 
 test(clone_expanded_singleton) :-
     new_automaton(A, singleton),
@@ -443,7 +457,7 @@ test(map_of_fresh_states) :-
     map_pairs(StateMap, Pairs),
     assertion(length(Pairs, 2)),
     member(Id1-F1, Pairs),
-    member(Id2-F2, Pairs),
+    member(Id2-F2, Pairs),!,
     assertion(state:is_state(F1)),
     assertion(state:is_state(F2)).
 
